@@ -1,3 +1,5 @@
+### Version 1.0 i guess
+
 import pywemo
 import tkinter as tk
 import threading
@@ -72,7 +74,7 @@ class PyWeMoGUIApp:
         self.nopasswordcheckboxvar = tk.IntVar()
         self.nopasswordcheckbox = tk.Checkbutton(self.tabSetupWemo, text="No Password or Open network", command=self.handle_no_password_checkbox, variable=self.nopasswordcheckboxvar)
         self.setupbutton = tk.Button(self.tabSetupWemo, text="Setup Device", command=self.setup_device)
-        self.noteslabel = tk.Label(self.tabSetupWemo, text="Note that in order to set up WeMos with a Wi-Fi password,\nOpenSSL needs to be installed and usable as `openssl.exe` from the commandline.")
+        self.noteslabel = tk.Label(self.tabSetupWemo, text="Note that in order to set up WeMos with a Wi-Fi password,\nOpenSSL needs to be installed and usable as `openssl` from the commandline.")
         self.setupbutton.grid(row=2, column=3, padx=5, pady=0)
         self.ssidinputlabel.grid(row=1, column=0, padx=0, pady=5)
         self.ssidinput.grid(row=1, column=1, padx=0, pady=5)
@@ -83,9 +85,9 @@ class PyWeMoGUIApp:
 
         ## Create widgets for 'Reset WeMo' tab
         self.reset_personalized_info_button = tk.Button(self.tabResetWemo, text="Reset (Clear Personalized Info)", command=lambda: self.reset_device("clear_personalized_info"))
-        self.reset_wifi_button = tk.Button(self.tabResetWemo, text="Reset (Change WiFi)", command=lambda: self.reset_device("change_wifi"))    
+        self.reset_wifi_button = tk.Button(self.tabResetWemo, text="Reset (Change Wi-Fi)", command=lambda: self.reset_device("change_wifi"))    
         self.factory_reset_button = tk.Button(self.tabResetWemo, text="Reset (Factory Reset)", command=lambda: self.reset_device("factory_reset"))
-        self.reset_buttons_info_label = tk.Label(self.tabResetWemo, text="Clear Personalized Info: Resets personalized settings only (name, icon, rules).\nChange WiFi: Resets WiFi settings only.\nFactory Reset: Resets all settings to factory defaults.")
+        self.reset_buttons_info_label = tk.Label(self.tabResetWemo, text="Clear Personalized Info: Resets personalized settings only (name, icon, rules).\nChange Wi-Fi: Resets Wi-Fi settings only.\nFactory Reset: Resets all settings to factory defaults.")
 
         self.reset_personalized_info_button.grid(row=0, column=1, padx=5, pady=5)
         self.reset_wifi_button.grid(row=0, column=2, padx=5, pady=5)
