@@ -1,6 +1,7 @@
 .DS_Store
 *.log
 venv/
+venv.mac/
 dist/
 build/
 __pycache__/
