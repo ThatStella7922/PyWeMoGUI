@@ -1,7 +1,13 @@
 # PyWeMoGUI
-it is a gui yes
+A simple GUI that lets you manage your Belkin WeMo devices.
 
-Quick and dirty readme while I finish things up
+## Overview
+PyWeMoGUI lets you control, setup*, and reset any supported Belkin WeMo devices over the local network. This is useful, for example, to get your WeMos onto your home Wi-Fi network in order to use them with Home Assistant.\
+<sub>* Requires a computer with Wi-Fi</sub>\
+<br>
+PyWeMoGUI does not require an internet connection to get your WeMos up and running, and will continue to work after Belkin shuts down the WeMo online services and app.
+
+This README is not final, it will improve with time but I wanted to get this project out with the upcoming WeMo server shutdown.
 
 ### Requirements
 - Computer with Wi-Fi
@@ -11,9 +17,13 @@ Quick and dirty readme while I finish things up
   - Allows setting up WeMos with password protected Wi-Fi networks
 
 ## Setup
-1. Create a venv if you want
-2. Install pywemo - pip should install its dependencies (requests, ifaddr, lxml, urllib3)
-3. Optional: Install OpenSSL and make sure it's usable as `openssl` from the commandline. On Windows this might require editing your PATH.
+
+**These instructions will be different once there are packaged binary releases available!**
+- Download the repo as a zip file, or clone it. If you download a zip, extract it to a folder.
+- Create a venv if you want to keep this self-contained
+    - `python3 -m venv venv`
+- Install pywemo - pip should install its dependencies (requests, ifaddr, lxml, urllib3)
+- Optional: Install OpenSSL and make sure it's usable as `openssl` from the commandline. On Windows this might require editing your PATH.
 
 ## Usage
 - Run python: `python3 main.py`
