@@ -16,9 +16,12 @@ This README and project is not final, it will improve with time but I wanted to 
 - Optional: OpenSSL installed and usable as `openssl` from the commandline
   - Allows setting up WeMos with password protected Wi-Fi networks
 
-## Setup
 
-**These instructions will be different once there are packaged binary releases available!**
+
+## Manual setup
+> [!NOTE]  
+> If you do not want to manually set up for running locally, you you can grab an experimental binary from the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page.
+
 - Download the repo as a zip file, or clone it. If you download a zip, extract it to a folder.
 - Create a venv if you want to keep this self-contained
     - `python3 -m venv venv` to create it
@@ -28,8 +31,10 @@ This README and project is not final, it will improve with time but I wanted to 
 - Optional: Install OpenSSL and make sure it's usable as `openssl` from the commandline. On Windows this might require editing your PATH.
 
 ## Usage
-- Run python: `python3 main.py`
-- After a few seconds the main window should open and say "Autodiscovery in progress" in the list.
+If you set up for running locally with the 'Manual setup' instructions, run python: `python3 main.py`.\
+If you downloaded the binary from the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) then just run it like you would any other executable.
+
+After a few seconds the main window should open and say "Autodiscovery in progress" in the list.
 
 <img width=500 src=images/mainwindow.png>
 
