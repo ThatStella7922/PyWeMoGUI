@@ -68,10 +68,12 @@ class PyWeMoGUIApp:
         self.aboutbutton = ttk.Button(self.tabUtils, text="About", command=self.show_about_dialog)
         self.helpbutton = ttk.Button(self.tabUtils, text="Help", command=self.show_help_dialog)
         self.checkopensslbutton = ttk.Button(self.tabUtils, text="Check for OpenSSL", command=lambda: self.check_program_accessible("openssl"))
+        self.acquirehomekitdetailsbutton = ttk.Button(self.tabUtils, text="Acquire HomeKit details from WeMo", command=self.get_hk_info_from_device)
         self.rescandevicesbutton = ttk.Button(self.tabUtils, text="Rescan Devices", command=self.trigger_rescan)
         self.aboutbutton.grid(row=0, column=0, padx=5, pady=5)
         self.helpbutton.grid(row=1, column=0, padx=5, pady=5)
         self.checkopensslbutton.grid(row=0, column=2, padx=5, pady=5)
+        self.acquirehomekitdetailsbutton.grid(row=0, column=3, columnspan=2, padx=5, pady=5)
         self.rescandevicesbutton.grid(row=0, column=1, padx=5, pady=5)
 
         ## Create widgets for 'Setup WeMo' tab
@@ -119,6 +121,25 @@ class PyWeMoGUIApp:
             logger.info(f"Toggled device: {device_name}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to toggle device {device_name}: {repr(e)}")
+
+    def get_hk_info_from_device(self):
+        try:
+            selected=self.get_selected_device()
+            device_name = self.devlist.item(selected, 'text')
+            device = self.device_manager.get_device_by_name(device_name)
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        try:
+            setupState = self.get_hksetupstate_from_device(device)["HKSetupDone"]
+            setupCode = self.get_hksetupcode_from_device(device)["HKSetupCode"]
+        except Exception as e:
+            messagebox.showerror("PyWeMoGUI - Error", f"Failed to acquire the HomeKit details from the WeMo.\nAdditional info: {repr(e)}")
+        if setupState == "1":
+            setupStateFriendly = "set up"
+        else:
+            setupStateFriendly = "not set up"
+        self.show_infodialog("PyWeMoGUI - HomeKit details", f"{device_name}'s setup code is {setupCode}.\nThis WeMo is currently {setupStateFriendly} with HomeKit")
 
     def trigger_rescan(self):
         logger.info("Doing full device rescan")
@@ -179,7 +200,7 @@ class PyWeMoGUIApp:
                         messagebox.showerror("Error", f"Failed to reset (factory reset) device {device_name}: {repr(e)}")        
 
     def confirm_action(self, title, message):
-            return messagebox.askokcancel(title, message)
+        return messagebox.askokcancel(title, message)
     
     def handle_no_password_checkbox(self):
         if self.nopasswordcheckboxvar.get() == 1:
@@ -236,16 +257,37 @@ class PyWeMoGUIApp:
         executable_path = shutil.which(progtocheck)
         if executable_path:
             logger.debug(f"The path for the executable is: {executable_path}")
-            messagebox.showinfo(f"PyWeMoGUI - Checking {progtocheck}", f"The program {progtocheck} was found in the PATH.\n\nIt was found at: {executable_path}")
+            self.show_infodialog(f"PyWeMoGUI - Checking {progtocheck}", f"The program {progtocheck} was found in the PATH.\n\nIt was found at: {executable_path}")
         else:
             logger.error(f"{progtocheck} wasn't found in PATH.\n            PATH searched:\n{os.environ.get("PATH")}\n            Maybe the directory containing {progtocheck} is missing from your PATH?")
-            messagebox.showerror(f"PyWeMoGUI - Checking {progtocheck}", f"PyWeMoGUI was not able to find {progtocheck} in the PATH.\nAdditional information is available in the console.")
+            self.show_infodialog(f"PyWeMoGUI - Checking {progtocheck}", f"PyWeMoGUI was not able to find {progtocheck} in the PATH.\nAdditional information is available in the console.")
+
+    def get_hksetupstate_from_device(self, device):
+        logger.info("Getting HKSetupState from device")
+        try:
+            action = device.basicevent.getHKSetupState
+            logger.debug(action())
+            return (action())
+        except Exception as e:
+            raise Exception(e)
+    
+    def get_hksetupcode_from_device(self, device):
+        logger.info("Getting HKSetupCode from device")
+        try:
+            action = device.basicevent.GetHKSetupInfo
+            logger.debug(action())
+            return (action())
+        except Exception as e:
+            raise Exception(e)
+        
+    def show_infodialog(self, title, message):
+        messagebox.showinfo(title=title, message=message)
     
     def show_about_dialog(self):
-        messagebox.showinfo("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI for managing WeMo devices. Built on the PyWeMo library, not supported or endorsed by PyWeMo contributors\n\nhttps://github.com/thatstella7922/pywemogui\nThatStella7922 2026")
+        self.show_infodialog("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI for managing WeMo devices. Built on the PyWeMo library, not supported or endorsed by PyWeMo contributors\n\nhttps://github.com/thatstella7922/pywemogui\nThatStella7922 2026")
 
     def show_help_dialog(self):
-        messagebox.showinfo("PyWeMoGUI help", "You can visit the README for PyWeMoGUI at\nhttps://github.com/thatstella7922/pywemogui\nfor help")
+        self.show_infodialog("PyWeMoGUI help", "You can visit the README for PyWeMoGUI at\nhttps://github.com/thatstella7922/pywemogui\nfor help")
 
 
 class devices:
