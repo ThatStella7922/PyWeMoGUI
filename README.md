@@ -7,16 +7,16 @@ PyWeMoGUI lets you control, setup*, and reset any supported Belkin WeMo devices 
 <br>
 PyWeMoGUI does not require an internet connection to get your WeMos up and running, and will continue to work after Belkin shuts down the WeMo online services and app.
 
-This README and project is not final, it will improve with time but I wanted to get this project out with the upcoming WeMo server shutdown. At the very minimum I want to release easy-to-run binaries soon.
+This README and project is not final, it will improve with time but I wanted to get this project out with the upcoming WeMo server shutdown.
 
 ### Requirements
 - Computer with Wi-Fi
-- A relatively recent Python with Tk, I used 3.12.
 - A relatively recent OS, I used Windows
 - Optional: OpenSSL installed and usable as `openssl` from the commandline
   - Allows setting up WeMos with password protected Wi-Fi networks
 
-
+If running manual setup:
+- A relatively recent Python with Tk, I used 3.12.
 
 ## Manual setup
 > [!NOTE]  
@@ -42,7 +42,7 @@ After autodiscovery completes, any WeMos on your network will show up in the lis
 
 There are some tabs:
 - Controls lets you test a device by toggling its state (useful for lights)
-- Utilities lets you rescan the device list and has a help button that links to this page
+- Utilities lets you rescan devices, check if PyWeMoGUI can access OpenSSL, and links to this page
 - Setup WeMo contains everything required to setup a WeMo that has been reset, more on this later
 - Reset WeMo lets you reset a WeMo's personalized info, Wi-Fi settings or even fully factory reset it.
 

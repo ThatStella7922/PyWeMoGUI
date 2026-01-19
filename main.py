@@ -6,7 +6,9 @@ import tkinter.ttk as ttk
 import threading
 from tkinter import messagebox
 from tkinter import simpledialog
+import os
 import traceback
+import shutil
 
 class Logger:
     def __init__(self, prefix="PyWeMoGUI"):
@@ -23,6 +25,9 @@ class Logger:
 
     def info(self, message):
         print(f"[{self.prefix}] INFO: {message}")
+
+    def debug(self, message):
+        print(f"[{self.prefix}] DEBUG: {message}")
 
 class PyWeMoGUIApp:
     def __init__(self, root, logger: Logger):
@@ -62,9 +67,11 @@ class PyWeMoGUIApp:
         ## Create buttons for 'Utilities' tab
         self.aboutbutton = ttk.Button(self.tabUtils, text="About", command=self.show_about_dialog)
         self.helpbutton = ttk.Button(self.tabUtils, text="Help", command=self.show_help_dialog)
+        self.checkopensslbutton = ttk.Button(self.tabUtils, text="Check for OpenSSL", command=lambda: self.check_program_accessible("openssl"))
         self.rescandevicesbutton = ttk.Button(self.tabUtils, text="Rescan Devices", command=self.trigger_rescan)
         self.aboutbutton.grid(row=0, column=0, padx=5, pady=5)
         self.helpbutton.grid(row=1, column=0, padx=5, pady=5)
+        self.checkopensslbutton.grid(row=0, column=2, padx=5, pady=5)
         self.rescandevicesbutton.grid(row=0, column=1, padx=5, pady=5)
 
         ## Create widgets for 'Setup WeMo' tab
@@ -222,6 +229,17 @@ class PyWeMoGUIApp:
     def clear_device_list(self):
         for item in self.devlist.get_children():
             self.devlist.delete(item)
+
+    def check_program_accessible(self, progtocheck: str):
+        #TODO maybe make this a generic that doesn't show dialogs but instead returns a path or throws exception, both to be consumed from a check_openssl_accessible function?
+        logger.info(f"Checking that {progtocheck} is accessible to us")
+        executable_path = shutil.which(progtocheck)
+        if executable_path:
+            logger.debug(f"The path for the executable is: {executable_path}")
+            messagebox.showinfo(f"PyWeMoGUI - Checking {progtocheck}", f"The program {progtocheck} was found in the PATH.\n\nIt was found at: {executable_path}")
+        else:
+            logger.error(f"{progtocheck} wasn't found in PATH.\n            PATH searched:\n{os.environ.get("PATH")}\n            Maybe the directory containing {progtocheck} is missing from your PATH?")
+            messagebox.showerror(f"PyWeMoGUI - Checking {progtocheck}", f"PyWeMoGUI was not able to find {progtocheck} in the PATH.\nAdditional information is available in the console.")
     
     def show_about_dialog(self):
         messagebox.showinfo("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI for managing WeMo devices. Built on the PyWeMo library, not supported or endorsed by PyWeMo contributors\n\nhttps://github.com/thatstella7922/pywemogui\nThatStella7922 2026")
