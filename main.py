@@ -129,23 +129,21 @@ class PyWeMoGUIApp:
         Toggles the selected device. For most devices this will result in turning it off/on.
         '''
         try:
-            selected=self.get_selected_device()
-            device_name = self.devlist.item(selected, 'text')
+            device = self.get_selected_device()
+            device.toggle()
+            logger.debug(f"Toggled device {device.name}")
         except ValueError as ve:
             messagebox.showerror("Error", str(ve))
             return
-        try:
-            self.device_manager.get_device_by_name(device_name).toggle()
-            logger.debug(f"Toggled device: {device_name}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to toggle device {device_name}: {repr(e)}")
+            messagebox.showerror("Error", f"Could not toggle '{device.name}' because of the following error:\n{repr(e)}")
 
     def get_hk_info_from_device(self):
         '''
         Gets the HomeKit setup **state** and setup **code** from the selected device, then displays it in an info dialog.
         '''
         try:
-            selected=self.get_selected_device()
+            selected=self.get_selected_device_DEPRECATED()
             device_name = self.devlist.item(selected, 'text')
             device = self.device_manager.get_device_by_name(device_name)
         except ValueError as ve:
@@ -177,7 +175,7 @@ class PyWeMoGUIApp:
         Sets up a device with the specified Wi-Fi credentials
         '''
         try:
-            selected=self.get_selected_device()
+            selected=self.get_selected_device_DEPRECATED()
             device_name=self.devlist.item(selected, 'text')
         except ValueError as ve:
             messagebox.showerror("Error", str(ve))
@@ -211,7 +209,7 @@ class PyWeMoGUIApp:
         - "factory_reset" - Resets all settings to factory defaults.
         '''
         try:
-            selected=self.get_selected_device()
+            selected=self.get_selected_device_DEPRECATED()
             device_name=self.devlist.item(selected, 'text')
         except ValueError as ve:
             messagebox.showerror("Error", str(ve))
@@ -244,7 +242,7 @@ class PyWeMoGUIApp:
     def on_tree_select(self, event):
         if self.rescanDone:
             try:
-                selected=self.get_selected_device()
+                selected=self.get_selected_device_DEPRECATED()
                 device_name=self.devlist.item(selected, 'text')
             except ValueError as ve:
                 messagebox.showerror("Error", str(ve))
@@ -253,7 +251,7 @@ class PyWeMoGUIApp:
         else:
             logger.info("Ignored selection in device list because rescan isn't done")
 
-    def get_selected_device(self):
+    def get_selected_device_DEPRECATED(self):
         '''
         imagine get_selected_device_promax but worse and needs all the error handling in the caller
         '''
@@ -263,15 +261,16 @@ class PyWeMoGUIApp:
         else: 
             raise ValueError("No device selected")
         
-    def get_selected_device_promax(self) -> pywemo.ouimeaux_device.Device:
+    def get_selected_device(self) -> pywemo.ouimeaux_device.Device:
         '''
         Return a pywemo device object for whatever device is selected in the list.
         Make sure the caller can catch or passthrough exceptions.
 
-        :param self: just add this you need it
-
         ## Throws
         `ValueError` if there is no selected device
+
+        :returns: The selected device as a pywemo device object
+        :rtype: pywemo.ouimeaux_device.Device
         '''
         lineitem = self.devlist.selection()
         if not lineitem:
