@@ -254,11 +254,33 @@ class PyWeMoGUIApp:
             logger.info("Ignored selection in device list because rescan isn't done")
 
     def get_selected_device(self):
+        '''
+        imagine get_selected_device_promax but worse and needs all the error handling in the caller
+        '''
         selected=self.devlist.focus()
         if selected:
             return selected
         else: 
             raise ValueError("No device selected")
+        
+    def get_selected_device_promax(self) -> pywemo.ouimeaux_device.Device:
+        '''
+        Return a pywemo device object for whatever device is selected in the list.
+        Make sure the caller can catch or passthrough exceptions.
+
+        :param self: just add this you need it
+
+        ## Throws
+        `ValueError` if there is no selected device
+        '''
+        lineitem = self.devlist.selection()
+        if not lineitem:
+            raise ValueError("There is no device selected")
+        device_index = self.devlist.index(lineitem[0])
+        logger.debug(f"Index of the selected device is {device_index}")
+        device = self.device_manager.get_device_by_array_index(device_index) #maybe add throws to this function
+        logger.debug(f"Device object is {device}")
+        return device
 
     def setup_device_list(self):
         '''
