@@ -11,7 +11,13 @@ import traceback
 import shutil
 
 class Logger:
+    '''
+    Docstring for Logger
+    
+    :var will: it logs to console with log, debug, info, warn and error levels
+    '''
     def __init__(self, prefix="PyWeMoGUI"):
+        self.enableDebugs = False
         self.prefix = prefix
 
     def log(self, message):
@@ -27,13 +33,22 @@ class Logger:
         print(f"[{self.prefix}] INFO: {message}")
 
     def debug(self, message):
-        print(f"[{self.prefix}] DEBUG: {message}")
+        if self.enableDebugs:
+            print(f"[{self.prefix}] DEBUG: {message}")
 
+    def setDebugs(self, val: bool):
+        if val:
+            self.enableDebugs = True
+            self.debug("Debug logging enabled")
+        else:
+            self.debug("Debug logging was disabled")
+            self.enableDebugs = False
 class PyWeMoGUIApp:
     def __init__(self, root, logger: Logger):
         self.logger = logger
+        logger.setDebugs(True)
         self.root = root
-        logger.log("Starting GUI")
+        logger.debug("Starting GUI")
         self.root.title("PyWeMoGUI")
         self.root.geometry("640x360")
         self.root.resizable(False, False)
@@ -110,6 +125,9 @@ class PyWeMoGUIApp:
         self.trigger_rescan()
     
     def toggle_device(self):
+        '''
+        Toggles the selected device. For most devices this will result in turning it off/on.
+        '''
         try:
             selected=self.get_selected_device()
             device_name = self.devlist.item(selected, 'text')
@@ -118,11 +136,14 @@ class PyWeMoGUIApp:
             return
         try:
             self.device_manager.get_device_by_name(device_name).toggle()
-            logger.info(f"Toggled device: {device_name}")
+            logger.debug(f"Toggled device: {device_name}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to toggle device {device_name}: {repr(e)}")
 
     def get_hk_info_from_device(self):
+        '''
+        Gets the HomeKit setup **state** and setup **code** from the selected device, then displays it in an info dialog.
+        '''
         try:
             selected=self.get_selected_device()
             device_name = self.devlist.item(selected, 'text')
@@ -142,13 +163,19 @@ class PyWeMoGUIApp:
         self.show_infodialog("PyWeMoGUI - HomeKit details", f"{device_name}'s setup code is {setupCode}.\nThis WeMo is currently {setupStateFriendly} with HomeKit")
 
     def trigger_rescan(self):
-        logger.info("Doing full device rescan")
+        '''
+        Prepares for, then runs a device discovery (re)scan. This function **will** set the helper variable to inform that a rescan is in progress, unlike setup_device_list.
+        '''
+        logger.debug("Doing full device rescan")
         self.rescanDone = False
         self.clear_device_list()
         self.populate_placeholder_in_list()
         self.setup_device_list()
     
     def setup_device(self):
+        '''
+        Sets up a device with the specified Wi-Fi credentials
+        '''
         try:
             selected=self.get_selected_device()
             device_name=self.devlist.item(selected, 'text')
@@ -172,9 +199,17 @@ class PyWeMoGUIApp:
         except pywemo.exceptions.SetupException as se:
             messagebox.showerror("Setup Error", f"Setup did not succeed for '{device_name}' because of the following error:\n{se}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to setup device '{device_name}': {repr(e)}")
+            messagebox.showerror("Error", f"Failed to start setup for device '{device_name}' because of the following error: {repr(e)}")
         
     def reset_device(self, reset_type):
+        '''
+        Resets the selected device according to the specified reset type.
+
+        :param reset_type: Must be one of three strings:
+        - "clear_personalized_info" - Resets personalized settings only (name, icon, rules).
+        - "change_wifi" - Resets Wi-Fi settings only.
+        - "factory_reset" - Resets all settings to factory defaults.
+        '''
         try:
             selected=self.get_selected_device()
             device_name=self.devlist.item(selected, 'text')
@@ -198,9 +233,6 @@ class PyWeMoGUIApp:
                         self.device_manager.get_device_by_name(device_name).reset(data=True, wifi=True)
                     except Exception as e:
                         messagebox.showerror("Error", f"Failed to reset (factory reset) device {device_name}: {repr(e)}")        
-
-    def confirm_action(self, title, message):
-        return messagebox.askokcancel(title, message)
     
     def handle_no_password_checkbox(self):
         if self.nopasswordcheckboxvar.get() == 1:
@@ -229,7 +261,18 @@ class PyWeMoGUIApp:
             raise ValueError("No device selected")
 
     def setup_device_list(self):
-        logger.info("Starting device discovery thread")
+        '''
+        Utility function that gets the device list ready to go when called. It will:
+        1. Create a device manager to put devices into
+        2. Create a thread
+        3. In the thread, run device discovery
+        4. In the thread, clear the device list
+        5. In the thread, populate the device list with what was discovered
+        6. In the thread, set a helper variable to inform other functions that a rescan is not in progress
+
+        This function will **not** set the helper variable to inform that a rescan is in progress.
+        '''
+        logger.debug("Starting device discovery thread")
         self.device_manager = devices()
         def threaded_discovery():
             self.device_manager.discover_devices()
@@ -241,7 +284,7 @@ class PyWeMoGUIApp:
 
     def populate_device_list(self, device_manager):
         for device in device_manager.devices:
-            logger.info(f"Listing device: {device.name} ({device.model_name}) at {device.host}")
+            logger.debug(f"Listing device: {device.name} ({device.model_name}) at {device.host}")
             self.devlist.insert('', 'end', text=device.name, values=(device.model_name, device.host))
 
     def populate_placeholder_in_list(self):
@@ -252,6 +295,13 @@ class PyWeMoGUIApp:
             self.devlist.delete(item)
 
     def check_program_accessible(self, progtocheck: str):
+        '''
+        Checks if a specified program is available to PyWeMoGUI on the PATH.
+        Needs refactoring.
+        
+        :param progtocheck: Binary name to search for on the PATH
+        :type progtocheck: str
+        '''
         #TODO maybe make this a generic that doesn't show dialogs but instead returns a path or throws exception, both to be consumed from a check_openssl_accessible function?
         logger.info(f"Checking that {progtocheck} is accessible to us")
         executable_path = shutil.which(progtocheck)
@@ -262,7 +312,15 @@ class PyWeMoGUIApp:
             logger.error(f"{progtocheck} wasn't found in PATH.\n            PATH searched:\n{os.environ.get("PATH")}\n            Maybe the directory containing {progtocheck} is missing from your PATH?")
             self.show_infodialog(f"PyWeMoGUI - Checking {progtocheck}", f"PyWeMoGUI was not able to find {progtocheck} in the PATH.\nAdditional information is available in the console.")
 
-    def get_hksetupstate_from_device(self, device):
+    def get_hksetupstate_from_device(self, device: pywemo.ouimeaux_device.Device):
+        #TODO parse the dict in here instead requiring caller to parse
+        '''
+        Docstring for get_hksetupstate_from_device
+        
+        :param self: Description
+        :param device: Device to get the HomeKit setup state from
+        :type device: pywemo.ouimeaux_device.Device
+        '''
         logger.info("Getting HKSetupState from device")
         try:
             action = device.basicevent.getHKSetupState
@@ -271,7 +329,14 @@ class PyWeMoGUIApp:
         except Exception as e:
             raise Exception(e)
     
-    def get_hksetupcode_from_device(self, device):
+    def get_hksetupcode_from_device(self, device: pywemo.ouimeaux_device.Device):
+        #TODO parse the dict in here instead requiring caller to parse
+        '''
+        Gets the HomeKit setup code from a specified device
+        
+        :param device: Device to get the HomeKit setup code from
+        :type device: pywemo.ouimeaux_device.Device
+        '''
         logger.info("Getting HKSetupCode from device")
         try:
             action = device.basicevent.GetHKSetupInfo
@@ -281,15 +346,31 @@ class PyWeMoGUIApp:
             raise Exception(e)
         
     def show_infodialog(self, title, message):
+        '''
+        Show an info dialog with the specified title and message.
+        
+        :param title: Title for the info dialog
+        :param message: Description for the info dialog
+        '''
         messagebox.showinfo(title=title, message=message)
+    
+    def confirm_action(self, title, message):
+        '''
+        Show an "are you sure?" dialog with the specified title and message.
+        
+        :param title: Title for the dialog
+        :param message: Description for the dialog
+
+        :returns bool: True if accepted, False if canceled.
+        '''
+        return messagebox.askokcancel(title, message)
     
     def show_about_dialog(self):
         self.show_infodialog("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI for managing WeMo devices. Built on the PyWeMo library, not supported or endorsed by PyWeMo contributors\n\nhttps://github.com/thatstella7922/pywemogui\nThatStella7922 2026")
 
     def show_help_dialog(self):
         self.show_infodialog("PyWeMoGUI help", "You can visit the README for PyWeMoGUI at\nhttps://github.com/thatstella7922/pywemogui\nfor help")
-
-
+        
 class devices:
     def __init__(self):
         self.devices = []
@@ -301,18 +382,33 @@ class devices:
         return [device.name for device in self.devices]
 
     def get_device_by_name(self, name):
+        '''
+        Returns the device with the specified name
+        
+        :param index: The name of the device in the table to return
+        '''
         for device in self.devices:
             if device.name == name:
                 return device
         return None
     
     def get_device_by_ip(self, ip):
+        '''
+        Returns the device with the specified IP
+        
+        :param index: The IP of the device in the table to return
+        '''
         for device in self.devices:
             if device.host == ip:
                 return device
         return None
     
-    def get_device_by_array_index(self, index): # Probably more performant than by name or ip
+    def get_device_by_array_index(self, index: int): # Probably more performant than by name or ip
+        '''
+        Returns the device with the specified index
+        
+        :param index: The index of the device in the table to return
+        '''
         if 0 <= index < len(self.devices):
             return self.devices[index]
         return None
