@@ -1,14 +1,14 @@
 ### Version 1.0 i guess
 
+import os
+import platform
+import traceback
+import shutil
 import pywemo
 import tkinter as tk
 import tkinter.ttk as ttk
 import threading
 from tkinter import messagebox
-from tkinter import simpledialog
-import os
-import traceback
-import shutil
 
 class Logger:
     '''
@@ -19,6 +19,7 @@ class Logger:
     def __init__(self, prefix="PyWeMoGUI"):
         self.enableDebugs = False
         self.prefix = prefix
+        self.info("Logger initialized")
 
     def log(self, message):
         print(f"[{self.prefix}] {message}")
@@ -46,9 +47,9 @@ class Logger:
 class PyWeMoGUIApp:
     def __init__(self, root, logger: Logger):
         self.logger = logger
-        logger.setDebugs(True)
+        logger.debug("We are in PyWeMoGUIApp")
+        logger.log("Loading the GUI")
         self.root = root
-        logger.debug("Starting GUI")
         self.root.title("PyWeMoGUI")
         self.root.geometry("640x360")
         self.root.resizable(False, False)
@@ -62,6 +63,7 @@ class PyWeMoGUIApp:
         self.devlist.heading("type", text="Type")
         self.devlist.heading("ip", text="IP Address")
         self.devlist.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        logger.debug("Device list created")
 
         ## Add tabs to root
         self.tabs = ttk.Notebook(root) ### instantiate
@@ -73,11 +75,20 @@ class PyWeMoGUIApp:
         self.tabs.add(self.tabSetupWemo, text='Setup WeMo') #### name it and add to tabs
         self.tabResetWemo = ttk.Frame(self.tabs) #### instantiate child tabResetWemo
         self.tabs.add(self.tabResetWemo, text='Reset WeMo') #### name it and add to tabs
+        self.tabDebug = ttk.Frame(self.tabs)
+        self.tabs.add(self.tabDebug, text="Debug") #### this should probably be tests instead of a tab with buttons but oh well lmao
         self.tabs.pack(expand=1, fill="both") #### pack to make visible
+        logger.debug("Tabs created")
+
+        ## Create buttons for 'Debug' tab
+        self.debug_gsdpm = ttk.Button(self.tabDebug, text="get_selected_device_pro_max", command=self.get_selected_device)
+        self.debug_gsdpm.grid(row=0, column=0, columnspan=2)
+        logger.debug("Debug tab buttons created")
 
         ## Create buttons for 'Controls' tab
         self.togglebutton = ttk.Button(self.tabControl, text="Test Device (Toggle)", command=self.toggle_device)
         self.togglebutton.grid(row=0, column=0, padx=5, pady=5)
+        logger.debug("Controls tab buttons created")
 
         ## Create buttons for 'Utilities' tab
         self.aboutbutton = ttk.Button(self.tabUtils, text="About", command=self.show_about_dialog)
@@ -90,6 +101,7 @@ class PyWeMoGUIApp:
         self.checkopensslbutton.grid(row=0, column=2, padx=5, pady=5)
         self.acquirehomekitdetailsbutton.grid(row=0, column=3, columnspan=2, padx=5, pady=5)
         self.rescandevicesbutton.grid(row=0, column=1, padx=5, pady=5)
+        logger.debug("Utilities tab buttons created")
 
         ## Create widgets for 'Setup WeMo' tab
         self.ssidinputlabel = ttk.Label(self.tabSetupWemo, text="WiFi SSID:")
@@ -107,6 +119,7 @@ class PyWeMoGUIApp:
         self.passwordinput.grid(row=1, column=3, padx=0, pady=5)
         self.nopasswordcheckbox.grid(row=2, column=1, padx=0, pady=0)
         self.noteslabel.grid(row=3, column=0, padx=0, pady=0, columnspan=4, rowspan=1)
+        logger.debug("Setup WeMo tab widgets created")
 
         ## Create widgets for 'Reset WeMo' tab
         self.reset_personalized_info_button = ttk.Button(self.tabResetWemo, text="Reset (Clear Personalized Info)", command=lambda: self.reset_device("clear_personalized_info"))
@@ -118,10 +131,11 @@ class PyWeMoGUIApp:
         self.reset_wifi_button.grid(row=0, column=2, padx=5, pady=5)
         self.factory_reset_button.grid(row=0, column=3, padx=5, pady=5)
         self.reset_buttons_info_label.grid(row=1, column=0, columnspan=4, padx=5, pady=5)
+        logger.debug("Reset WeMo tab widgets created")
 
         logger.log("GUI is ready")
         self.devlist.bind("<<TreeviewSelect>>", self.on_tree_select)
-        logger.log("Automatically starting device scan")
+        logger.info("Automatically starting device scan")
         self.trigger_rescan()
     
     def toggle_device(self):
@@ -435,8 +449,11 @@ class devices:
         return None
 
 if __name__ == '__main__':
+    print("PyWeMoGUI is starting")
     logger = Logger()
-    logger.log("Initializing...")
+    logger.setDebugs(True)
+    logger.info(f"Running on {platform.system()} {platform.version()} ({os.cpu_count()}x {platform.machine()})")
+    logger.log("Initializing PyWeMoGUIApp")
     try:
         root = tk.Tk()
         app = PyWeMoGUIApp(root, logger)
