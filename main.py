@@ -59,10 +59,16 @@ class PyWeMoGUIApp:
         # Create and place widgets
         ## Create device list
         self.devlist = ttk.Treeview(self.root)
-        self.devlist['columns'] = ('type', 'ip')
+        self.devlist['columns'] = ('type', 'ip', 'mac', 'serial')
         self.devlist.heading("#0", text="Name")
         self.devlist.heading("type", text="Type")
         self.devlist.heading("ip", text="IP Address")
+        self.devlist.heading("mac", text="MAC Address")
+        self.devlist.heading("serial", text="Serial Number")
+        self.devlist.column("type", width=90)
+        self.devlist.column("ip", width=100)
+        self.devlist.column("mac", width=100)
+        self.devlist.column("serial", width=100)
         self.devlist.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5)
         logger.debug("Device list created")
 
@@ -88,19 +94,27 @@ class PyWeMoGUIApp:
 
         ## Create buttons for 'Controls' tab
         self.togglebutton = ttk.Button(self.tabControl, text="Test Device (Toggle)", command=self.toggle_device)
+        self.renamebutton = ttk.Button(self.tabControl, text="Rename Device", command=self.rename_device_gui)
+        self.gethomekitdetailsbutton = ttk.Button(self.tabControl, text="Get HomeKit details", command=self.get_hk_info_from_device)
+        self.copyipaddressbutton = ttk.Button(self.tabControl, text="Copy IP Address", command=self.copy_device_ipaddress)
+        self.copymacaddressbutton = ttk.Button(self.tabControl, text="Copy MAC Address", command=self.copy_device_macaddress)
+        self.copyserialbutton = ttk.Button(self.tabControl, text="Copy Serial Number", command=self.copy_device_serial)
         self.togglebutton.grid(row=0, column=0, padx=5, pady=5)
+        self.gethomekitdetailsbutton.grid(row=1, column=0, padx=5, pady=5)
+        self.renamebutton.grid(row=1, column=1, padx=5, pady=5)
+        self.copyipaddressbutton.grid(row=1, column=2, padx=5, pady=5)
+        self.copymacaddressbutton.grid(row=1, column=3, padx=5, pady=5)
+        self.copyserialbutton.grid(row=1, column=4, padx=5, pady=5)
         logger.debug("Controls tab buttons created")
 
         ## Create buttons for 'Utilities' tab
         self.aboutbutton = ttk.Button(self.tabUtils, text="About", command=self.show_about_dialog)
         self.helpbutton = ttk.Button(self.tabUtils, text="Help", command=self.show_help_dialog)
-        self.checkopensslbutton = ttk.Button(self.tabUtils, text="Check for OpenSSL", command=lambda: self.check_program_accessible("openssl"))
-        self.acquirehomekitdetailsbutton = ttk.Button(self.tabUtils, text="Acquire HomeKit details from WeMo", command=self.get_hk_info_from_device)
+        self.checkopensslbutton = ttk.Button(self.tabUtils, text="Check for OpenSSL", command=lambda: self.check_program_accessible("openssl"))   
         self.rescandevicesbutton = ttk.Button(self.tabUtils, text="Rescan Devices", command=self.trigger_rescan)
         self.aboutbutton.grid(row=0, column=0, padx=5, pady=5)
         self.helpbutton.grid(row=1, column=0, padx=5, pady=5)
         self.checkopensslbutton.grid(row=0, column=2, padx=5, pady=5)
-        self.acquirehomekitdetailsbutton.grid(row=0, column=3, columnspan=2, padx=5, pady=5)
         self.rescandevicesbutton.grid(row=0, column=1, padx=5, pady=5)
         logger.debug("Utilities tab buttons created")
 
@@ -134,8 +148,21 @@ class PyWeMoGUIApp:
         self.reset_buttons_info_label.grid(row=1, column=0, columnspan=4, padx=5, pady=5)
         logger.debug("Reset WeMo tab widgets created")
 
+        ## Create right click menu for the device list
+        self.devlist_ctxmenu = tk.Menu(self.root, tearoff=0)
+        self.devlist_ctxmenu.add_command(label="Device actions . . .", state='disabled')
+        self.devlist_ctxmenu.add_command(label="Test Device (Toggle)", command=self.toggle_device)
+        self.devlist_ctxmenu.add_command(label="Rename Device", command=self.rename_device_gui)
+        self.devlist_ctxmenu.add_command(label="Copy IP Address", command=self.copy_device_ipaddress)
+        self.devlist_ctxmenu.add_command(label="Copy MAC Address", command=self.copy_device_macaddress)
+        self.devlist_ctxmenu.add_command(label="Copy serial number", command=self.copy_device_serial)
+        self.devlist_ctxmenu.add_separator()
+        self.devlist_ctxmenu.add_command(label="Rescan devices", command=self.trigger_rescan)
+        logger.debug("Device list right click menu created")
+
         logger.log("GUI is ready")
-        self.devlist.bind("<<TreeviewSelect>>", self.on_tree_select)
+        self.devlist.bind("<<TreeviewSelect>>", self.on_tree_select) # bind selection event on device list to on_tree_select
+        self.devlist.bind("<Button-3>", self.show_devlist_ctxmenu) # bind the right click on the device list to show context menu
         logger.info("Automatically starting device scan")
         self.trigger_rescan()
     
@@ -152,21 +179,6 @@ class PyWeMoGUIApp:
             return
         except Exception as e:
             messagebox.showerror("Error", f"Could not toggle '{device.name}' because of the following error:\n{repr(e)}")
-
-    def rename_device_gui(self):
-        try:
-            device = self.get_selected_device()
-        except ValueError as ve:
-            messagebox.showerror("Error", str(ve))
-            return
-        new_name = self.show_askstringdialog("PyWeMoGUI - Rename device", f"Enter a new name for the device '{device.name}':", preset_string=device.name)
-        if new_name:
-            try:
-                self.rename_device(new_name, device)
-                self.show_infodialog("PyWeMoGUI - Rename device", f"Successfully renamed the device to '{new_name}'.\nA rescan will now occur to reflect the new name!")
-                self.trigger_rescan()
-            except Exception as e:
-                messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
 
     def rename_device_gui(self):
         try:
@@ -288,6 +300,55 @@ class PyWeMoGUIApp:
         else:
             self.passwordinput.config(state='normal')
 
+    def show_devlist_ctxmenu(self, event):
+        try:
+            self.devlist_ctxmenu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.devlist_ctxmenu.grab_release()
+
+    def copy_device_ipaddress(self):
+        try:
+            device = self.get_selected_device()
+            ip_address = device.host
+            self.root.clipboard_clear()
+            self.root.clipboard_append(ip_address)
+            logger.info(f"Copied {device.name}'s IP address '{ip_address}' to clipboard")
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not copy IP address because of the following error:\n{repr(e)}")
+
+    def copy_device_macaddress(self):
+        try:
+            device = self.get_selected_device()
+            mac_address = device.basicevent.GetMacAddr()['MacAddr']
+            if mac_address == "Unknown":
+                raise Exception("The device did not provide a MAC address or it is unavailable")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(mac_address)
+            logger.info(f"Copied {device.name}'s MAC address '{mac_address}' to clipboard")
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not copy MAC address because of the following error:\n{repr(e)}")
+
+    def copy_device_serial(self):
+        try:
+            device = self.get_selected_device()
+            serial_number = device.basicevent.GetMacAddr()['SerialNo']
+            if serial_number == "Unknown":
+                raise Exception("The device did not provide a serial number or it is unavailable")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(serial_number)
+            logger.info(f"Copied {device.name}'s serial number '{serial_number}' to clipboard")
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not copy serial number because of the following error:\n{repr(e)}")
+
     def on_tree_select(self, event):
         if self.rescanDone:
             try:
@@ -355,11 +416,17 @@ class PyWeMoGUIApp:
 
     def populate_device_list(self, device_manager):
         for device in device_manager.devices:
-            logger.debug(f"Listing device: {device.name} ({device.model_name}) at {device.host}")
-            self.devlist.insert('', 'end', text=device.name, values=(device.model_name, device.host))
+            try:
+                devInfo = device.basicevent.GetMacAddr()
+                                         # Device Name            # Device Type       # IP Address        # MAC Address         # Serial Number
+            except Exception as e:
+                logger.error(f"Device {device.name} lacks the GetMacAddr() basicevent so its MAC address and serial number will not be available")
+                devInfo = {'MacAddr': 'Unknown', 'SerialNo': 'Unknown'}
+            logger.debug(f"Listing device: {device.name} ({device.model_name}), {device.host}, {devInfo['MacAddr']}, {devInfo['SerialNo']}")
+            self.devlist.insert('', 'end', text=device.name, values=(device.model_name, device.host, devInfo['MacAddr'], devInfo['SerialNo']))
 
     def populate_placeholder_in_list(self):
-        self.devlist.insert('', 'end', text="Autodiscovery in progress", values=("please wait", ""))
+        self.devlist.insert('', 'end', text="Autodiscovery in progress", values=("please wait", "", "", ""))
 
     def clear_device_list(self):
         for item in self.devlist.get_children():
