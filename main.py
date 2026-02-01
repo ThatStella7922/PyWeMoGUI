@@ -411,10 +411,14 @@ class devices:
         self.devices = []
 
     def discover_devices(self):
+        self.devices.clear()
         self.devices = pywemo.discover_devices()
 
     def list_devices(self):
         return [device.name for device in self.devices]
+    
+    def sort_list_by_name(self):
+        self.devices.sort(key=lambda device: device.name)
 
     def get_device_by_name(self, name):
         '''
