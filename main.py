@@ -9,6 +9,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import threading
 from tkinter import messagebox
+from tkinter import simpledialog
 
 class Logger:
     '''
@@ -151,6 +152,36 @@ class PyWeMoGUIApp:
             return
         except Exception as e:
             messagebox.showerror("Error", f"Could not toggle '{device.name}' because of the following error:\n{repr(e)}")
+
+    def rename_device_gui(self):
+        try:
+            device = self.get_selected_device()
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        new_name = self.show_askstringdialog("PyWeMoGUI - Rename device", f"Enter a new name for the device '{device.name}':", preset_string=device.name)
+        if new_name:
+            try:
+                self.rename_device(new_name, device)
+                self.show_infodialog("PyWeMoGUI - Rename device", f"Successfully renamed the device to '{new_name}'.\nA rescan will now occur to reflect the new name!")
+                self.trigger_rescan()
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
+
+    def rename_device_gui(self):
+        try:
+            device = self.get_selected_device()
+        except ValueError as ve:
+            messagebox.showerror("Error", str(ve))
+            return
+        new_name = self.show_askstringdialog("PyWeMoGUI - Rename device", f"Enter a new name for the device '{device.name}':", preset_string=device.name)
+        if new_name:
+            try:
+                self.rename_device(new_name, device)
+                self.show_infodialog("PyWeMoGUI - Rename device", f"Successfully renamed the device to '{new_name}'.\nA rescan will now occur to reflect the new name!")
+                self.trigger_rescan()
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
 
     def get_hk_info_from_device(self):
         '''
@@ -385,6 +416,22 @@ class PyWeMoGUIApp:
         except Exception as e:
             raise Exception(e)
         
+    def rename_device(self, name: str, device: pywemo.ouimeaux_device.Device):
+        '''
+        Change a WeMo's name to the specified value
+        
+        :param name: New name for the WeMo
+        :param device: Device to get the HomeKit setup state from
+        :type device: pywemo.ouimeaux_device.Device
+        '''
+        logger.info("Renaming device")
+        try:
+            action = device.basicevent.ChangeFriendlyName(FriendlyName=name)
+            logger.debug(action)
+            return (action)
+        except Exception as e:
+            raise Exception(e)
+        
     def show_infodialog(self, title, message):
         '''
         Show an info dialog with the specified title and message.
@@ -393,6 +440,20 @@ class PyWeMoGUIApp:
         :param message: Description for the info dialog
         '''
         messagebox.showinfo(title=title, message=message)
+
+    def show_askstringdialog(self, title: str, prompt: str, preset_string: str=""):
+        '''
+        Show a dialog with a textfield that can accept a string.
+        If the user cancels None is returned, otherwise the string is returned.
+        
+        :param title: Title for the dialog
+        :type title: str
+        :param prompt: Prompt "please enter ..." for the dialog
+        :type prompt: str
+        :param preset_string: A preset value to show in the textfield (Optional)
+        :type preset_string: str
+        '''
+        return simpledialog.askstring(title= title, prompt = prompt, initialvalue = preset_string)
     
     def confirm_action(self, title, message):
         '''
