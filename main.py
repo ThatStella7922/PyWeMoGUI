@@ -188,9 +188,9 @@ class PyWeMoGUIApp:
         '''
         Sets up a device with the specified Wi-Fi credentials
         '''
+        logger.debug("Preparing to set up the selected device")
         try:
-            selected=self.get_selected_device_DEPRECATED()
-            device_name=self.devlist.item(selected, 'text')
+            device=self.get_selected_device()
         except ValueError as ve:
             messagebox.showerror("Error", str(ve))
             return
@@ -207,11 +207,15 @@ class PyWeMoGUIApp:
             password = self.passwordinput.get()
             if self.passwordinput.get() == "" and self.nopasswordcheckboxvar.get() == 1:
                 password = None
-            self.device_manager.get_device_by_name(device_name).setup(ssid=ssid, password=password)
+            logger.info(f"Starting setup for the '{device.name}' with SSID '{ssid}'. PyWeMoGUI will appear to be unresponsive while set up is in progress!\nThis will be fixed in a future version.")
+            self.show_infodialog("PyWeMoGUI - Setup", f"Starting setup for the '{device.name}'. PyWeMoGUI will appear to be unresponsive while set up is in progress!")
+            setupResult = device.setup(ssid=ssid, password=password)
         except pywemo.exceptions.SetupException as se:
-            messagebox.showerror("Setup Error", f"Setup did not succeed for '{device_name}' because of the following error:\n{se}")
+            messagebox.showerror("Setup Error", f"Setup did not succeed for '{device.name}' because of the following error:\n{se}\n\n\nIn some rare cases, the device might have actually been set up in spite of this error. You can re-connect to your home Wi-Fi and do a rescan to see if your new device is detected!")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to start setup for device '{device_name}' because of the following error: {repr(e)}")
+            messagebox.showerror("Error", f"Failed to start setup for device '{device.name}' because of the following error: {repr(e)}")
+        logger.info(f"Setup appears to have succeeded for '{device.name}'. Network status was {setupResult[0]} and close status was {setupResult[1]}")
+        self.show_infodialog("PyWeMoGUI -  Setup", f"Setup appears to have succeeded for '{device.name}'. Please reconnect to your home Wi-Fi and do a rescan to see if your new device is detected!")
         
     def reset_device(self, reset_type):
         '''
@@ -311,6 +315,7 @@ class PyWeMoGUIApp:
         self.device_manager = devices()
         def threaded_discovery():
             self.device_manager.discover_devices()
+            self.device_manager.sort_list_by_name()
             self.clear_device_list()
             self.populate_device_list(self.device_manager)
             self.rescanDone = True
