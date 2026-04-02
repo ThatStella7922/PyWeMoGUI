@@ -2,10 +2,10 @@
 A simple GUI that lets you manage your Belkin WeMo devices.
 
 ## Overview
-PyWeMoGUI lets you control, setup*, and reset any supported Belkin WeMo devices over the local network. This is useful, for example, to get your WeMos onto your home Wi-Fi network in order to use them with Home Assistant. It also supports acquiring HomeKit setup codes from compatible WeMos, in the case that the WeMo's own HomeKit QR code was lost/damaged/etc.\
+PyWeMoGUI lets you control, setup*, and reset any supported Belkin WeMo devices over the local network. This is useful, for example, to get your WeMos onto your home Wi-Fi network in order to use them with Home Assistant. It also supports acquiring HomeKit setup codes from compatible WeMos, in the case that the WeMo's own HomeKit code was lost or damaged.\
 <sub>* Requires a computer with Wi-Fi</sub>\
 <br>
-PyWeMoGUI does not require an internet connection to get your WeMos up and running thanks to the [pywemo](https://github.com/pywemo/pywemo) library, and will continue to work after Belkin shuts down the WeMo online services and app.
+PyWeMoGUI does not require an internet connection to get your WeMos up and running thanks to the [pywemo](https://github.com/pywemo/pywemo) library, and has continud to work after Belkin's shutdown of the WeMo online services and app.
 
 You can download easy-to-run binaries of PyWeMoGUI on the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page, currently they are only available for Windows but macOS binaries are planned too.
 
@@ -14,10 +14,6 @@ This README and project are not final, it will improve with time but I wanted to
 ### Requirements
 - Computer with Wi-Fi
 - A relatively recent OS, I used Windows
-- Optional: OpenSSL installed and usable as `openssl` from the commandline
-  - Allows setting up WeMos with password protected Wi-Fi networks
-  - PyWeMoGUI's utilities tab lets you check your OpenSSL setup
-  - Should be pre-installed on macOS and Linux
 
 [For development](#development), with manual setup:
 - Python 3.10 or newer
@@ -41,7 +37,7 @@ There are some tabs:
   - View a device's HomeKit details so you can add it to HomeKit
   - Change a device's name
   - Copy a device's IP address, MAC address or serial number
-- Utilities lets you rescan devices, check if PyWeMoGUI can access OpenSSL, and links to this page
+- Utilities lets you rescan devices and links to this page
 - Setup WeMo contains everything required to setup a WeMo that has been reset, more on this later
 - Reset WeMo lets you reset a WeMo's personalized info, Wi-Fi settings or even fully factory reset it.
 - Debug is just for testing purposes and will have things inside that can appear nonsensical or even broken.
@@ -56,8 +52,6 @@ Once you are sure the WeMo is reset:
 4. Open PyWeMoGUI or rescan devices if it's already open
 5. You should see a single device in the table with the factory name of your device. For example a Dimmer will be named "Wemo Dimmer" in the list. Select it.
 6. Navigate to the Setup WeMo tab, then enter the details of the Wi-Fi network you want the WeMo to connect to. If it has no password, check the 'No password/Open network' checkbox
-> [!NOTE]  
-> Remember that you need OpenSSL usable from the commandline if you want to connect the WeMo to a password-protected network!
 7. If all goes well, your WeMo should reboot a few seconds later to apply its new settings.
 8. After about a minute, it should be on your Wi-Fi network. You can then re-connect to your home Wi-Fi network and rescan for devices to see your Wemo!
 
@@ -80,8 +74,6 @@ The WeMo will restart after a few seconds to clear its settings. After about a m
     - `venv\scripts\activate` to enter it
 - Install pywemo - pip should install its dependencies (requests, ifaddr, lxml, urllib3)
     - `pip3 install pywemo`
-- Optional: Install OpenSSL and make sure it's usable as `openssl` from the commandline. On Windows this might require editing your PATH.
-  - PyWeMoGUI's utilities tab lets you check your OpenSSL setup
   - Should be pre-installed on macOS and Linux
 
 You can now run PyWeMoGUI. If you set up pywemo inside a venv, make sure to activate it if you haven't already and then run `python3 main.py`. Otherwise, don't worry about activation and simply run the with the same command.
