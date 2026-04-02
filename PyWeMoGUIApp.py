@@ -190,7 +190,7 @@ class PyWeMoGUIApp:
             try:
                 self.rename_device(new_name, device)
                 self.show_infodialog("PyWeMoGUI - Rename", f"Successfully renamed the device to '{new_name}'.\nA device rescan will now occur to reflect the new name!")
-                self.trigger_rescan()
+                self.trigger_rescan_and_populate_device_list()
             except Exception as e:
                 messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
 
