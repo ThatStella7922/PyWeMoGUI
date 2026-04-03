@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(
     prog="PyWeMoGUI Build Script",
     description="Build packaged binaries of PyWeMoGUI",
-    color=True
     )
 parser.add_argument('--loglevel', '-l', help='Optionally define how verbose logs should be (default is INFO)', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO')
 parser.add_argument('--logtofile', '-lf', help='Optionally specify that the logs should be directed to a file', action="store_true")

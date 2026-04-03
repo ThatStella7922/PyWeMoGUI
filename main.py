@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(
     prog="PyWeMoGUI",
     description="A simple GUI that lets you manage your Belkin WeMo devices.",
-    color=True
     )
 parser.add_argument('--loglevel', '-l', help='Optionally define how verbose logs should be (default is INFO)', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO')
 args = parser.parse_args()
