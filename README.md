@@ -7,17 +7,23 @@ PyWeMoGUI lets you control, setup*, and reset any supported Belkin WeMo devices 
 <br>
 PyWeMoGUI does not require an internet connection to get your WeMos up and running thanks to the [pywemo](https://github.com/pywemo/pywemo) library, and has continud to work after Belkin's shutdown of the WeMo online services and app.
 
-You can download easy-to-run binaries of PyWeMoGUI on the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page, currently they are only available for Windows but macOS binaries are planned too.
-
 This README and project are not final, it will improve with time but I wanted to get this project out with the upcoming WeMo server shutdown.
 
 ### Requirements
 - Computer with Wi-Fi
 - A relatively recent OS, I used Windows
+- WeMo device(s)
 
 [For development](#development), with manual setup:
+- Git
 - Python 3.10 or newer
   - Pip & Tkinter must be supported
+  - uv for faster pip is a nice touch
+
+### Getting PyWeMoGUI
+You can download easy-to-run binaries of PyWeMoGUI on the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page.
+
+Currently, binaries are only available for Windows but macOS binaries are planned for the future. If your OS doesn't have a binary available or you want to set up for running locally, see [the development instructions](#development)
 
 ## Using PyWeMoGUI
 If you set up for running locally with [the development instructions](#development), see those instructions first.\
@@ -67,21 +73,24 @@ The WeMo will restart after a few seconds to clear its settings. After about a m
 > [!NOTE]  
 > If you do not want to develop PyWeMoGUI or manually set up for running locally, there are binaries on the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page.
 
-- Clone the repo with git:\
+1. Clone the repo with git:\
 `git clone https://github.com/thatstella7922/pywemogui`
-- Create a venv if you want to keep this self-contained
-    - `python3 -m venv venv` to create it
-    - `venv\scripts\activate` to enter it
-- Install pywemo - pip should install its dependencies (requests, ifaddr, lxml, urllib3)
-    - `pip3 install pywemo`
-  - Should be pre-installed on macOS and Linux
+2. Create a venv if you want to keep this self-contained
+    - Run `python3 -m venv venv` to create it
+    - Activate the venv:\
+    Windows: `venv\Scripts\activate`\
+    Linux/MacOS/*nix: `venv/Scripts/activate`
+3. Install the required packages:\
+`pip install -r requirements.txt`
 
 You can now run PyWeMoGUI. If you set up pywemo inside a venv, make sure to activate it if you haven't already and then run `python3 main.py`. Otherwise, don't worry about activation and simply run the with the same command.
 
 Once you see the main window, you can refer back to the [usage instructions](#using-pywemogui) to use the app.
 
 ### Building
-Since PyWeMoGUI is written in Python there is no real build process. You can run it as-is. The `build.py` file is mainly a convenience script to me to take some of the tedium out of the binary packaging process.
+Since PyWeMoGUI is written in Python there is no build process. You can run it as-is.
+
+The "build" process refers to creating a packaged binary with `pyinstaller`. To build a packaged binary, you can **first inspect** `build.py` to see how to use it, then run it. It supports command line arguments for skipping confirmation, logging to a file, or adjusting the log level, which can be useful for `pyinstaller`.
 
 ### "Roadmap"
 - [ ] Refactor most device-related functions for more robust exception handling
