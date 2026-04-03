@@ -1,38 +1,84 @@
 ### pywemogui "build" script aka this shit just uses PyInstaller because i have nothing better
 
-from os import name
+print("Welcome to pywemogui build script v2.0")
+
 import os
+import argparse
+import logging
+import platform
 import subprocess
 import shutil
 
-def determine_os():
-    if name == "nt":
-        return "windows"
-    elif name == "darwin":
-        return "macos"
-    elif name == "posix":
-        return "linux"
-    else:
-        return "unknown"
+def clean_build_folder():
+    '''
+    Utility to delete the build and dist folders in the current dir
+    
+    It will not ask before deleting so keep that in mind
+    '''
+    if os.path.exists("build"):
+        shutil.rmtree("build")
+        logger.debug("Removed build folder")
+    if os.path.exists("dist"):
+        shutil.rmtree("dist")
+        logger.debug("Removed dist folder")
+
+# Create argument parser and define the options
+logger = logging.getLogger(__name__)
+parser = argparse.ArgumentParser(
+    prog="PyWeMoGUI Build Script",
+    description="Build packaged binaries of PyWeMoGUI",
+    color=True
+    )
+parser.add_argument('--loglevel', '-l', help='Optionally define how verbose logs should be (default is INFO)', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO')
+parser.add_argument('--logtofile', '-lf', help='Optionally specify that the logs should be directed to a file', action="store_true")
+parser.add_argument('--noconfirm', '-nc', help='Skip confirmation before building (for automation?)', action='store_true')
+args = parser.parse_args()
+
+if args.logtofile:
+    print("Logging to file is enabled!")
+    logging.basicConfig(level=f"{args.loglevel}", format='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%I:%M:%S%p', filename="build.log", filemode="w")
+else:
+    logging.basicConfig(level=f"{args.loglevel}", format='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%I:%M:%S%p')
+logger.info(f"Logger started, loglevel is set to {args.loglevel}")
+logger.info(f"Running on {platform.system()} {platform.version()} ({platform.machine()}, {os.cpu_count()}x) with Python {platform.python_version()}")
+
+import PyInstaller.__main__
 
 if __name__ == "__main__":
-    print("Welcome to pywemogui build script v1.0")
-    print(f"Detected OS: {determine_os()}. Build requires PyInstaller and PyWeMo")
-    match determine_os():
-        case "windows":
-            print("Build will begin when you press any key")
-            os.system('pause')
-            print("Preparing to build (cleaning build folder)")
-            if os.path.exists("build"):
-                shutil.rmtree("build")
-            if os.path.exists("dist"):
-                shutil.rmtree("dist")
-            print("Building please WAIT")
-            result = subprocess.run(['pyinstaller', '-F', 'main.py'], capture_output=True, text=True)
-            log = result.stdout.strip()
-            with open("build.log", "w") as log_file:
-                log_file.write(log)
-            log_file.close()
-            print("Build complete check dist folder for the binary or build.log for build log")
-        case _:
-            raise NotImplementedError("Build script only supports Windows")
+    try:
+        # Determine the OS
+        match platform.system():
+            case "Windows":
+                # Windows build instructions and code
+                logger.info("""For a successful build on Windows, you must:
+                          1. Install all required modules (requirements.txt) with uv or pip or whatever
+                          2. Install PyInstaller and make sure it can be found in PATH (aka a proper installation)
+
+                          Once you have made sure this is done, you can start the build""")
+                if not args.noconfirm:
+                    input("Press Enter to start build or press Ctrl+C to exit now!")
+                logger.info("Preparing to build (cleaning build folder)")
+                clean_build_folder()
+                logger.info("Now starting the build please WAIT")
+                # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
+                PyInstaller.__main__.run([
+                    '-F',
+                    'main.py'
+                    ])
+                logger.info("Build complete check dist folder for the binary, scroll up for log")
+            ### ADD ADDITIONAL CASES FOR OTHER OSES
+            case _:
+                #Generic catchall for an unsupported OS
+                raise NotImplementedError(f"OS '{platform.system()}' is not supported in this build script yet")
+    #Error handling
+    except NotImplementedError as nie:
+        #We use NotImplementedError for when an OS is unsupported
+        logger.critical(f"{nie}")
+    except Exception as e:
+        logger.critical(f"Something broke so badly that there isn't a dedicated exception handler for it")
+        logger.critical(f"Full error: {repr(e)}")
+    except KeyboardInterrupt:
+        #Make breaking with ctrl+c a bit nicer
+        print("\n")
+        logger.info("Ctrl+C caught, exiting...")
+        exit(1)
