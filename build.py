@@ -22,6 +22,16 @@ def clean_build_folder():
         shutil.rmtree("dist")
         logger.debug("Removed dist folder")
 
+def prepare_to_build():
+    '''
+    Utility to prepare for a build, includes logging.
+    
+    Cleans build folder and logs some stuff for now
+    '''
+    logger.info("Preparing to build (cleaning build folder)")
+    clean_build_folder()
+    logger.info("Now starting the build please WAIT")
+
 # Create argument parser and define the options
 logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(
@@ -56,12 +66,36 @@ if __name__ == "__main__":
                           Once you have made sure this is done, you can start the build""")
                 if not args.noconfirm:
                     input("Press Enter to start build or press Ctrl+C to exit now!")
-                logger.info("Preparing to build (cleaning build folder)")
-                clean_build_folder()
-                logger.info("Now starting the build please WAIT")
+                prepare_to_build
                 # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
                 PyInstaller.__main__.run([
-                    '-F',
+                    '--specpath',
+                    'spec',
+                    '--onefile',
+                    '--name',
+                    'PyWeMoGUI-Windows',
+                    'main.py'
+                    ])
+                logger.info("Build complete check dist folder for the binary, scroll up for log")
+            case "Darwin":
+                # Mac OS X build instructions and code
+                logger.info("Hello we are on macOS")
+                if not args.noconfirm:
+                    input("Press Enter to start build or press Ctrl+C to exit now!")
+                #logger.info("We need to install the CPython 3.14.x macOS 10.13+ universal2 wheel for lxml!") # at https://files.pythonhosted.org/packages/03/15/d4a377b385ab693ce97b472fe0c77c2b16ec79590e688b3ccc71fba19884/lxml-6.0.2-cp314-cp314-macosx_10_13_universal2.whl
+                prepare_to_build()
+                # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
+                PyInstaller.__main__.run([
+                    '--specpath',
+                    'spec',
+                    '--onedir',
+                    '--windowed',
+                    '--osx-bundle-identifier',
+                    'thatstel.la.pywemogui',
+                    #'--target-architecture',
+                    #'universal2',
+                    '--name',
+                    'PyWeMoGUI-Darwin',
                     'main.py'
                     ])
                 logger.info("Build complete check dist folder for the binary, scroll up for log")
