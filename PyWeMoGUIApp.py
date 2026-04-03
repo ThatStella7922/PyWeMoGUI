@@ -11,7 +11,7 @@ from tkinter import simpledialog
 from PyWeMoGUIDeviceManager import PyWeMoGUIDeviceManager
 
 class PyWeMoGUIApp:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk):
         self.logger = logging.getLogger(__name__)
 
         self.device_manager = PyWeMoGUIDeviceManager() # Instantiate a device manager early

@@ -28,13 +28,18 @@ try:
 except ImportError as ie:
     logger.critical(f"Failed to import tkinter. Please check if you need a different Python distribution or maybe just need to install Tkinter. (Full: {repr(ie)})")
     exit(1) # bail lol
-from PyWeMoGUIApp import PyWeMoGUIApp
 
+try:
+    from hidpi_tk import DPIAwareTk
+    from PyWeMoGUIApp import PyWeMoGUIApp
+except ImportError as ie:
+    logger.critical(f"Importing a required library failed! {ie}. If you are running a binary from the Releaes, create a GitHub issue. Otherwise, check your installation!")
+    exit(1)
 
 if __name__ == '__main__':
     logger.debug("Setting up Tk and initializing PyWeMoGUIApp...")
     try:
-        root = tk.Tk()
+        root = DPIAwareTk()
         app = PyWeMoGUIApp(root)
         app.root.mainloop()
     except Exception as e:

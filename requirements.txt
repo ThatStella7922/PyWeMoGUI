@@ -1,1 +1,2 @@
 pywemo
+hidpi-tk
