@@ -29,7 +29,9 @@ except ImportError as ie:
     exit(1) # bail lol
 
 try:
-    from hidpi_tk import DPIAwareTk
+    if platform.system() == "Windows":
+        logger.debug("Importing hidpi_tk since we are on Windows")
+        from hidpi_tk import DPIAwareTk
     from PyWeMoGUIApp import PyWeMoGUIApp
 except ImportError as ie:
     logger.critical(f"Importing a required library failed! {ie}. If you are running a binary from the Releaes, create a GitHub issue. Otherwise, check your installation!")
@@ -38,7 +40,10 @@ except ImportError as ie:
 if __name__ == '__main__':
     logger.debug("Setting up Tk and initializing PyWeMoGUIApp...")
     try:
-        root = DPIAwareTk()
+        if platform.system() == "Windows":
+            root = DPIAwareTk()
+        else:
+            root = tk.Tk()
         app = PyWeMoGUIApp(root)
         app.root.mainloop()
     except Exception as e:

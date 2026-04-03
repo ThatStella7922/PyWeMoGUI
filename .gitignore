@@ -2,6 +2,7 @@
 *.log
 venv/
 venv.mac/
+.vscode/
 dist/
 build/
 __pycache__/
