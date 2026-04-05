@@ -25,7 +25,7 @@ class PyWeMoGUIApp:
         self.logger.info("Loading the GUI")
         self.root = root
         self.root.title("PyWeMoGUI")
-        self.root.geometry("640x360")
+        self.root.geometry("720x360")
         self.root.resizable(False, False)
         self.rescanDone = False
 
@@ -54,15 +54,13 @@ class PyWeMoGUIApp:
         self.tabs.add(self.tabSetupWemo, text='Setup WeMo') #### name it and add to tabs
         self.tabResetWemo = ttk.Frame(self.tabs) #### instantiate child tabResetWemo
         self.tabs.add(self.tabResetWemo, text='Reset WeMo') #### name it and add to tabs
-        self.tabDebug = ttk.Frame(self.tabs)
-        self.tabs.add(self.tabDebug, text="Debug") #### this should probably be tests instead of a tab with buttons but oh well lmao
+        #self.tabDebug = ttk.Frame(self.tabs)
+        #self.tabs.add(self.tabDebug, text="Debug") #### this should probably be tests instead of a tab with buttons but oh well lmao
         self.tabs.pack(expand=1, fill="both") #### pack to make visible
         self.logger.debug("Tabs created")
 
         ## Create buttons for 'Debug' tab
-        self.debug_gsdpm = ttk.Button(self.tabDebug, text="get_selected_device_pro_max", command=self.get_selected_device)
-        self.debug_gsdpm.grid(row=0, column=0, columnspan=2)
-        self.logger.debug("Debug tab buttons created")
+        #self.logger.debug("Debug tab buttons created")
 
         ## Create buttons for 'Controls' tab
         self.togglebutton = ttk.Button(self.tabControl, text="Test Device (Toggle)", command=self.toggle_device)
@@ -72,11 +70,11 @@ class PyWeMoGUIApp:
         self.copymacaddressbutton = ttk.Button(self.tabControl, text="Copy MAC Address", command=self.copy_device_macaddress)
         self.copyserialbutton = ttk.Button(self.tabControl, text="Copy Serial Number", command=self.copy_device_serial)
         self.togglebutton.grid(row=0, column=0, padx=5, pady=5)
+        self.renamebutton.grid(row=0, column=1, padx=5, pady=5)
         self.gethomekitdetailsbutton.grid(row=1, column=0, padx=5, pady=5)
-        self.renamebutton.grid(row=1, column=1, padx=5, pady=5)
-        self.copyipaddressbutton.grid(row=1, column=2, padx=5, pady=5)
-        self.copymacaddressbutton.grid(row=1, column=3, padx=5, pady=5)
-        self.copyserialbutton.grid(row=1, column=4, padx=5, pady=5)
+        self.copyipaddressbutton.grid(row=1, column=1, padx=5, pady=5)
+        self.copymacaddressbutton.grid(row=1, column=2, padx=5, pady=5)
+        self.copyserialbutton.grid(row=1, column=3, padx=5, pady=5)
         self.logger.debug("Controls tab buttons created")
 
         ## Create buttons for 'Utilities' tab
@@ -90,9 +88,9 @@ class PyWeMoGUIApp:
 
         ## Create widgets for 'Setup WeMo' tab
         self.ssidinputlabel = ttk.Label(self.tabSetupWemo, text="WiFi SSID:")
-        self.ssidinput = ttk.Entry(self.tabSetupWemo, width=30)
+        self.ssidinput = ttk.Entry(self.tabSetupWemo, width=25)
         self.passwordinputlabel = ttk.Label(self.tabSetupWemo, text="WiFi Password:")
-        self.passwordinput = ttk.Entry(self.tabSetupWemo, width=30, show="*")
+        self.passwordinput = ttk.Entry(self.tabSetupWemo, width=25, show="●")
         self.nopasswordcheckboxvar = tk.IntVar()
         self.nopasswordcheckbox = ttk.Checkbutton(self.tabSetupWemo, text="No Password or Open network", command=self.handle_no_password_checkbox, variable=self.nopasswordcheckboxvar)
         self.setupbutton = ttk.Button(self.tabSetupWemo, text="Setup Device", command=self.setup_device)
@@ -160,7 +158,7 @@ class PyWeMoGUIApp:
             self.rescanDone = True
         except Empty:
             pass
-        self.root.after(1000, self.check_device_discovery_queue)
+        self.root.after(500, self.check_device_discovery_queue)
     
     def toggle_device(self):
         '''
