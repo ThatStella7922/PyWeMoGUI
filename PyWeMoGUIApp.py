@@ -538,7 +538,7 @@ class PyWeMoGUIApp:
         return messagebox.askokcancel(title, message)
     
     def show_about_dialog(self):
-        self.show_infodialog("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI for managing WeMo devices. Built on the PyWeMo library, not supported or endorsed by PyWeMo contributors\n\nhttps://github.com/thatstella7922/pywemogui\nThatStella7922 2026")
+        self.show_infodialog("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI that lets you manage your Belkin WeMo devices.\n\nPyWeMoGUI is built on the pyWeMo library and is not supported or endorsed by pyWeMo contributors.\n\nhttps://github.com/ThatStella7922/PyWeMoGUI\nhttps://thatstel.la\nThatStella7922 2026")
 
     def show_help_dialog(self):
-        self.show_infodialog("PyWeMoGUI help", "You can visit the README for PyWeMoGUI at\nhttps://github.com/thatstella7922/pywemogui\nfor help")
+        self.show_infodialog("PyWeMoGUI Help", "The README for PyWeMoGUI describes everything there is to know about the app, you can find it at:\n\nhttps://github.com/ThatStella7922/PyWeMoGUI")
