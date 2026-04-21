@@ -172,6 +172,7 @@ class PyWeMoGUIApp:
             messagebox.showerror("Error", str(ve))
             return
         except Exception as e:
+            self.logger.error(f"Failed to toggle device '{device.name}' because of the following error: {repr(e)}")
             messagebox.showerror("Error", f"Could not toggle '{device.name}' because of the following error:\n{repr(e)}")
 
     def rename_device_gui(self):
@@ -190,6 +191,7 @@ class PyWeMoGUIApp:
                 self.show_infodialog("PyWeMoGUI - Rename", f"Successfully renamed the device to '{new_name}'.\nA device rescan will now occur to reflect the new name!")
                 self.trigger_rescan_and_populate_device_list()
             except Exception as e:
+                self.logger.error(f"Failed to rename device '{device.name}' because of the following error: {repr(e)}")
                 messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
 
     def get_hk_info_from_device(self):
@@ -206,6 +208,7 @@ class PyWeMoGUIApp:
             setupState = self.get_hksetupstate_from_device(device)["HKSetupDone"]
             setupCode = self.get_hksetupcode_from_device(device)["HKSetupCode"]
         except Exception as e:
+            self.logger.error(f"Failed to get HomeKit details for device '{device_name}' because of the following error: {repr(e)}")
             messagebox.showerror("PyWeMoGUI - Error", f"Failed to acquire the HomeKit details from the WeMo.\nAdditional info: {repr(e)}")
         if setupState == "1":
             setupStateFriendly = "set up"
@@ -239,10 +242,18 @@ class PyWeMoGUIApp:
             self.logger.info(f"Starting setup for the '{device.name}' with SSID '{ssid}'. PyWeMoGUI will appear to be unresponsive while set up is in progress!\nThis will be fixed in a future version.")
             self.show_infodialog("PyWeMoGUI - Setup", f"Starting setup for the '{device.name}'. PyWeMoGUI will appear to be unresponsive while set up is in progress!")
             setupResult = device.setup(ssid=ssid, password=password)
+        except pywemo.exceptions.APNotFound as apnfe:
+            self.logger.error(f"Setup didn't succeed for '{device.name}' because the WeMo couldn't find the '{ssid}' Wi-Fi network: {repr(apnfe)}")
+            messagebox.showerror("Setup Error - PyWeMoGUI", f"Setup did not succeed for '{device.name}' because the WeMo couldn't find the '{ssid}' Wi-Fi network.\nPlease check that your WeMo is in range of the Wi-Fi network and that you entered the SSID correctly.")
         except pywemo.exceptions.SetupException as se:
-            messagebox.showerror("Setup Error", f"Setup did not succeed for '{device.name}' because of the following error:\n{se}\n\n\nIn some rare cases, the device might have actually been set up in spite of this error. You can re-connect to your home Wi-Fi and do a rescan to see if your new device is detected!")
+            self.logger.error(f"Setup didn't succeed for '{device.name}' because of the following setup error: {repr(se)}")
+            messagebox.showerror("Setup Error - PyWeMoGUI", f"Setup did not succeed for '{device.name}' because of the following error:\n{se}\n\nIn some rare cases, the device might have actually been set up in spite of this error. You can re-connect to your home Wi-Fi and do a rescan to see if your new device is detected!")
+        except pywemo.exceptions.ShortPassword as spe:
+            self.logger.error(f"Setup didn't succeed for '{device.name}' because the password provided is too short: {repr(spe)}")
+            messagebox.showerror("Setup Error - PyWeMoGUI", f"Setup did not succeed for '{device.name}' because the password provided is too short. WeMo Wi-Fi passwords must be at least 8 characters long.\n\nMaybe you meant to check the 'No Password/Open Network' box?")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to start setup for device '{device.name}' because of the following error: {repr(e)}")
+            self.logger.error(f"Failed to start setup for device '{device.name}' because of the following error: {repr(e)}")
+            messagebox.showerror("Error - PyWeMoGUI", f"Failed to start setup for device '{device.name}' because of the following error: {repr(e)}")
         self.logger.info(f"Setup appears to have succeeded for '{device.name}'. Network status was {setupResult[0]} and close status was {setupResult[1]}")
         self.show_infodialog("PyWeMoGUI -  Setup", f"Setup appears to have succeeded for '{device.name}'. Please reconnect to your home Wi-Fi and do a rescan to see if your new device is detected!")
         
@@ -267,16 +278,19 @@ class PyWeMoGUIApp:
                     try:
                         selected.reset(data=True, wifi=False)
                     except Exception as e:
+                        self.logger.error(f"Failed to reset (clear personalized info) for device '{device_name}' because of the following error: {repr(e)}")
                         messagebox.showerror("Error", f"Failed to reset (clear personalized info) for device {device_name}: {repr(e)}")
                 case "change_wifi":
                     try:
                         selected.reset(data=False, wifi=True)
                     except Exception as e:
+                        self.logger.error(f"Failed to reset (change WiFi) for device '{device_name}' because of the following error: {repr(e)}")
                         messagebox.showerror("Error", f"Failed to reset (change WiFi) for device {device_name}: {repr(e)}")
                 case "factory_reset":
                     try:
                         selected.reset(data=True, wifi=True)
                     except Exception as e:
+                        self.logger.error(f"Failed to reset (factory reset) for device '{device_name}' because of the following error: {repr(e)}")
                         messagebox.showerror("Error", f"Failed to reset (factory reset) device {device_name}: {repr(e)}")        
     
     def handle_no_password_checkbox(self):
@@ -449,7 +463,7 @@ class PyWeMoGUIApp:
         :param device: Device to get the HomeKit setup state from
         :type device: pywemo.ouimeaux_device.Device
         '''
-        self.logger.info("Getting HKSetupState from device")
+        self.logger.debug("Getting HKSetupState from device")
         try:
             action = device.basicevent.getHKSetupState
             self.logger.debug(action())
@@ -465,7 +479,7 @@ class PyWeMoGUIApp:
         :param device: Device to get the HomeKit setup code from
         :type device: pywemo.ouimeaux_device.Device
         '''
-        self.logger.info("Getting HKSetupCode from device")
+        self.logger.debug("Getting HKSetupCode from device")
         try:
             action = device.basicevent.GetHKSetupInfo
             self.logger.debug(action())
