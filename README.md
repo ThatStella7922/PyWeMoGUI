@@ -94,7 +94,7 @@ The "build" process refers to creating a packaged binary with `pyinstaller`. To 
 
 ### "Roadmap"
 - [ ] Refactor most device-related functions for more robust exception handling
-- [ ] QR code generation for HomeKit setup codes (WeMos can return an `X-HM://` URL for setup)
+- [x] QR code generation for HomeKit setup codes (WeMos can return an `X-HM://` URL for setup)
 - [x] Renaming devices
 - [ ] Device specific controls such as dimmer brightness
 - [ ] Device specific configuration such as dimmer brightness *range*

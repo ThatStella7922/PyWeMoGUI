@@ -1,2 +1,4 @@
 pywemo
 hidpi-tk
+qrcode
+pillow

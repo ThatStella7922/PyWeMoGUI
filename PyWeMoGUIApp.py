@@ -9,6 +9,7 @@ from tkinter import messagebox
 from tkinter import simpledialog
 
 from PyWeMoGUIDeviceManager import PyWeMoGUIDeviceManager
+from PyWeMoGUIDialogs import PyWeMoGUIHomeKitInfoDialog
 
 class PyWeMoGUIApp:
     def __init__(self, root: tk.Tk):
@@ -65,7 +66,7 @@ class PyWeMoGUIApp:
         ## Create buttons for 'Controls' tab
         self.togglebutton = ttk.Button(self.tabControl, text="Test Device (Toggle)", command=self.toggle_device)
         self.renamebutton = ttk.Button(self.tabControl, text="Rename Device", command=self.rename_device_gui)
-        self.gethomekitdetailsbutton = ttk.Button(self.tabControl, text="Get HomeKit details", command=self.get_hk_info_from_device)
+        self.gethomekitdetailsbutton = ttk.Button(self.tabControl, text="Get HomeKit details", command=self.show_hk_info_dialog)
         self.copyipaddressbutton = ttk.Button(self.tabControl, text="Copy IP Address", command=self.copy_device_ipaddress)
         self.copymacaddressbutton = ttk.Button(self.tabControl, text="Copy MAC Address", command=self.copy_device_macaddress)
         self.copyserialbutton = ttk.Button(self.tabControl, text="Copy Serial Number", command=self.copy_device_serial)
@@ -194,9 +195,11 @@ class PyWeMoGUIApp:
                 self.logger.error(f"Failed to rename device '{device.name}' because of the following error: {repr(e)}")
                 messagebox.showerror("Error", f"Could not rename '{device.name}' because of the following error:\n{repr(e)}")
 
-    def get_hk_info_from_device(self):
+    def show_hk_info_dialog(self):
         '''
-        Gets the HomeKit setup **state** and setup **code** from the selected device, then displays it in an info dialog.
+        Gets the HomeKit setup code and URI from the selected device, then display it in a custom dialog.
+
+        The dialog will show the a setup QR code generated from the URI, help text, and the setup code for advanced or manual usage.
         '''
         try:
             device = self.get_selected_device()
@@ -205,16 +208,19 @@ class PyWeMoGUIApp:
             messagebox.showerror("Error", str(ve))
             return
         try:
-            setupState = self.get_hksetupstate_from_device(device)["HKSetupDone"]
-            setupCode = self.get_hksetupcode_from_device(device)["HKSetupCode"]
+            setupcode = self.get_hksetupcode_from_device(device)
+            setupURI = self.get_hksetupuri_from_device(device)
+            self.logger.debug(f"Got HomeKit setup info from device: URI {setupURI} and code {setupcode}, creating info dialog")
         except Exception as e:
             self.logger.error(f"Failed to get HomeKit details for device '{device_name}' because of the following error: {repr(e)}")
             messagebox.showerror("PyWeMoGUI - Error", f"Failed to acquire the HomeKit details from the WeMo.\nAdditional info: {repr(e)}")
-        if setupState == "1":
-            setupStateFriendly = "set up"
-        else:
-            setupStateFriendly = "not set up"
-        self.show_infodialog("PyWeMoGUI - HomeKit details", f"{device_name}'s setup code is {setupCode}.\nThis WeMo is currently {setupStateFriendly} with HomeKit")
+        try:
+            info_dialog = PyWeMoGUIHomeKitInfoDialog(self.root, device_name, setupURI, setupcode)
+            info_dialog.grab_set() # make the dialog modal so it stays on top and focused until dismissed
+        except Exception as e:
+            self.logger.error(f"Failed to create HomeKit info dialog for device '{device_name}' because of the following error: {repr(e)}")
+            messagebox.showerror("PyWeMoGUI - Error", f"Failed to show the HomeKit info dialog.\nAdditional info: {repr(e)}")
+        
     
     def setup_device(self):
         '''
@@ -455,7 +461,6 @@ class PyWeMoGUIApp:
             self.show_infodialog(f"PyWeMoGUI - Checking {progtocheck}", f"PyWeMoGUI was not able to find {progtocheck} in the PATH.\nAdditional information is available in the console.")
 
     def get_hksetupstate_from_device(self, device: pywemo.ouimeaux_device.Device):
-        #TODO parse the dict in here instead requiring caller to parse
         '''
         Docstring for get_hksetupstate_from_device
         
@@ -466,13 +471,12 @@ class PyWeMoGUIApp:
         self.logger.debug("Getting HKSetupState from device")
         try:
             action = device.basicevent.getHKSetupState
-            self.logger.debug(action())
-            return (action())
+            self.logger.debug(action()["HKSetupDone"])
+            return (action()["HKSetupDone"])
         except Exception as e:
             raise Exception(e)
     
     def get_hksetupcode_from_device(self, device: pywemo.ouimeaux_device.Device):
-        #TODO parse the dict in here instead requiring caller to parse
         '''
         Gets the HomeKit setup code from a specified device
         
@@ -482,8 +486,25 @@ class PyWeMoGUIApp:
         self.logger.debug("Getting HKSetupCode from device")
         try:
             action = device.basicevent.GetHKSetupInfo
-            self.logger.debug(action())
-            return (action())
+            self.logger.debug(action()["HKSetupCode"])
+            return (action()["HKSetupCode"])
+        except Exception as e:
+            raise Exception(e)
+    
+    def get_hksetupuri_from_device(self, device: pywemo.ouimeaux_device.Device):
+        '''
+        Gets the HomeKit setup URI from a specified device.
+        This URI can be used in a QR code that can be scanned by an iPhone to set up the WeMo in HomeKit.
+
+        The URI returned will look like this, if supported: `X-HM://000XXXXXXX000`
+
+        :param device: Device to get the HomeKit setup URI from
+        :type device: pywemo.ouimeaux_device.Device
+        '''
+        self.logger.debug("Getting HKSetupKey from device")
+        try:
+            action = device.basicevent.GetHKSetupInfo
+            return (action()['HKSetupKey'])
         except Exception as e:
             raise Exception(e)
         
