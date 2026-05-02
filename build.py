@@ -8,6 +8,7 @@ import logging
 import platform
 import subprocess
 import shutil
+from PyWeMoGUISystemUtils import GitUtils
 
 def clean_build_folder():
     '''
@@ -44,7 +45,7 @@ parser.add_argument('--noconfirm', '-nc', help='Skip confirmation before buildin
 args = parser.parse_args()
 
 if args.logtofile:
-    print("Logging to file is enabled!")
+    print("Logging to file is enabled! You will not see logs in this console window")
     logging.basicConfig(level=f"{args.loglevel}", format='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%I:%M:%S%p', filename="build.log", filemode="w")
 else:
     logging.basicConfig(level=f"{args.loglevel}", format='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%I:%M:%S%p')
@@ -76,6 +77,8 @@ if __name__ == "__main__":
                     'PyWeMoGUI-Windows',
                     'main.py'
                     ])
+                # rename the output now
+                os.rename("dist/PyWeMoGUI-Windows.exe", "dist/PyWeMoGUI-Windows-{revision}.exe".format(revision=GitUtils.get_git_revision_short_hash()))
                 logger.info("Build complete check dist folder for the binary, scroll up for log")
             case "Darwin":
                 # Mac OS X build instructions and code
@@ -98,6 +101,8 @@ if __name__ == "__main__":
                     'PyWeMoGUI-Darwin',
                     'main.py'
                     ])
+                #rename output now
+                os.rename("dist/PyWeMoGUI-Darwin.app", "dist/PyWeMoGUI-Darwin-{revision}.app".format(revision=GitUtils.get_git_revision_short_hash()))
                 logger.info("Build complete check dist folder for the binary, scroll up for log")
             ### ADD ADDITIONAL CASES FOR OTHER OSES
             case _:
