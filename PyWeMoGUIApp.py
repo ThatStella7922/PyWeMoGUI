@@ -10,6 +10,7 @@ from tkinter import simpledialog
 
 from PyWeMoGUIDeviceManager import PyWeMoGUIDeviceManager
 from PyWeMoGUIDialogs import PyWeMoGUIHomeKitInfoDialog
+from PyWeMoGUIDialogs import PyWeMoGUIAboutDialog
 
 class PyWeMoGUIApp:
     def __init__(self, root: tk.Tk):
@@ -559,7 +560,8 @@ class PyWeMoGUIApp:
         return messagebox.askokcancel(title, message)
     
     def show_about_dialog(self):
-        self.show_infodialog("About PyWeMoGUI", "PyWeMoGUI\nA simple GUI that lets you manage your Belkin WeMo devices.\n\nPyWeMoGUI is built on the pyWeMo library and is not supported or endorsed by pyWeMo contributors.\n\nhttps://github.com/ThatStella7922/PyWeMoGUI\nhttps://thatstel.la\nThatStella7922 2026")
+        about_dialog = PyWeMoGUIAboutDialog(self.root)
+        about_dialog.grab_set()
 
     def show_help_dialog(self):
         self.show_infodialog("PyWeMoGUI Help", "The README for PyWeMoGUI describes everything there is to know about the app, you can find it at:\n\nhttps://github.com/ThatStella7922/PyWeMoGUI")
