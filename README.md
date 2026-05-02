@@ -10,20 +10,22 @@ PyWeMoGUI does not require an internet connection to get your WeMos up and runni
 This README and project are not final, it will improve with time but I wanted to get this project out with the upcoming WeMo server shutdown.
 
 ### Requirements
+For regular usage:
 - Computer with Wi-Fi
-- A relatively recent OS, I used Windows
+- A relatively recent OS (Windows 11/macOS Sonoma/etc)
 - WeMo device(s)
 
-[For development](#development), with manual setup:
+[For development](#development), you will need:
+- Everything you'd need for regular usage
 - Git
 - Python 3.10 or newer
   - Pip & Tkinter must be supported
-  - uv for faster pip is a nice touch
+  - uv for a faster version of pip is a nice touch but not needed
 
 ### Getting PyWeMoGUI
 You can download easy-to-run binaries of PyWeMoGUI on the [Releases](https://github.com/ThatStella7922/PyWeMoGUI/releases) page.
 
-Currently, binaries are only available for Windows but macOS binaries are planned for the future. If your OS doesn't have a binary available or you want to set up for running locally, see [the development instructions](#development)
+Binaries are available for Windows (tested) and macOS (mostly untested). If your OS doesn't have a binary available or you want to set up for running locally, see [the development instructions](#development)
 
 ## Using PyWeMoGUI
 If you set up for running locally with [the development instructions](#development), see those instructions first.\
@@ -79,11 +81,11 @@ The WeMo will restart after a few seconds to clear its settings. After about a m
     - Run `python3 -m venv venv` to create it
     - Activate the venv:\
     Windows: `venv\Scripts\activate`\
-    Linux/MacOS/*nix: `venv/Scripts/activate`
+    Linux/MacOS/*nix: `source venv/bin/activate`
 3. Install the required packages:\
 `pip install -r requirements.txt`
 
-You can now run PyWeMoGUI. If you set up pywemo inside a venv, make sure to activate it if you haven't already and then run `python3 main.py`. Otherwise, don't worry about activation and simply run the with the same command.
+You can now run PyWeMoGUI by running `python3 main.py`.
 
 Once you see the main window, you can refer back to the [usage instructions](#using-pywemogui) to use the app.
 
