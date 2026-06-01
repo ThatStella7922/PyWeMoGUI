@@ -62,7 +62,7 @@ class PyWeMoGUIAboutDialog(tk.Toplevel):
         about_label = ttk.Label(self, wraplength=380 ,text=about_text)
         about_label.pack(padx=10, pady=10)
 
-class PyWeMoGUIHelpDialog(tk.TopLevel):
+class PyWeMoGUIHelpDialog(tk.Toplevel):
     '''Full help dialog with tabs covering different help topics'''
     def __init__(self, parent):
         self.logger = logging.getLogger(f"{__name__} HelpDialog")
