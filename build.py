@@ -95,8 +95,8 @@ if __name__ == "__main__":
                     '--windowed',
                     '--osx-bundle-identifier',
                     'thatstel.la.pywemogui',
-                    #'--target-architecture',
-                    #'universal2',
+                    '--target-architecture',
+                    'universal2',
                     '--name',
                     'PyWeMoGUI-Darwin',
                     'main.py'
