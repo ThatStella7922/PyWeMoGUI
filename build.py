@@ -9,7 +9,6 @@ import platform
 import subprocess
 import shutil
 from build_support.macosx import macosx
-from delocate.fuse import fuse_wheels
 from PyWeMoGUISystemUtils import GitUtils
 
 def clean_build_folder():
@@ -41,9 +40,17 @@ parser = argparse.ArgumentParser(
     prog="PyWeMoGUI Build Script",
     description="Build packaged binaries of PyWeMoGUI",
     )
+
+# General
 parser.add_argument('--loglevel', '-l', help='Optionally define how verbose logs should be (default is INFO)', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO')
 parser.add_argument('--logtofile', '-lf', help='Optionally specify that the logs should be directed to a file', action="store_true")
 parser.add_argument('--noconfirm', '-nc', help='Skip confirmation before building (for automation?)', action='store_true')
+
+# macosx-specific
+parser.add_argument('--universal2', '-u2', help='Enables building one binary for both Intel-based Macs and Macs with Apple silicon', action='store_true')
+parser.add_argument('--skipmerge', '-sm', help='Skips downloading and creating universal2 wheels.', action='store_true')
+
+# parser
 args = parser.parse_args()
 
 if args.logtofile:
@@ -83,14 +90,20 @@ if __name__ == "__main__":
                 os.rename("dist/PyWeMoGUI-Windows.exe", "dist/PyWeMoGUI-Windows-{revision}.exe".format(revision=GitUtils.get_git_revision_short_hash()))
                 logger.info("Build complete check dist folder for the binary, scroll up for log")
             case "Darwin":
+                buildsupport = macosx()
                 # Mac OS X build instructions and code
                 logger.info("Hello we are on macOS")
                 if not args.noconfirm:
                     input("Press Enter to start build or press Ctrl+C to exit now!")
-                logger.info("In order to build universal2, we need to download and merge a few packages.")
                 buildsupport = macosx()
-                for package, version in buildsupport.PACKAGES.items():
-                    buildsupport.merge_and_install(package, version)
+                if args.universal2 and not args.skipmerge:
+                    logger.info("In order to build universal2, we need to download and merge a few packages.")
+                    for package, version in buildsupport.PACKAGES.items():
+                        buildsupport.merge_and_install(package, version)
+                elif args.universal2 and args.skipmerge:
+                    logger.info("Building universal2 and skipping wheel preperation. This will fail if you don't have universal2 wheels!")
+                else:
+                    logger.info("Building for current architecture. To build universal2, pass --universal2 or -u2 to this script.")
                 prepare_to_build()
                 # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
                 PyInstaller.__main__.run([
@@ -100,8 +113,11 @@ if __name__ == "__main__":
                     '--windowed',
                     '--osx-bundle-identifier',
                     'thatstel.la.pywemogui',
-                    '--target-architecture',
-                    'universal2',
+                    *(
+                        ['--target-architecture', 'universal2']
+                        if args.universal2
+                        else []
+                    ),
                     '--name',
                     'PyWeMoGUI-Darwin',
                     'main.py'
