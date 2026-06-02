@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
-
+import argparse
 import json
-import sys
 import logging
+import sys
 from pathlib import Path
 from urllib.request import urlopen, urlretrieve
 from delocate.fuse import fuse_wheels
 from packaging.utils import parse_wheel_filename
 from subprocess import Popen, PIPE, STDOUT
+from PyWeMoGUISystemUtils import GitUtils
 
-class macosx:
+class macosx_prep:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
@@ -33,7 +33,7 @@ class macosx:
         
         self.PY_TAG, self.ABI_TAG = self.current_tags()
         self.logger.debug(f"Tags: {self.PY_TAG}, {self.ABI_TAG}")
-
+        
     def pip_force_reinstall(self, path_or_url):
         '''
         Forces a reinstall of a wheel from URL or a local path.
@@ -231,6 +231,56 @@ class macosx:
         self.logger.debug(f"Forcing reinstall of {package} using pip and generated .whl")
         self.pip_force_reinstall(created)
 
+class macosx_build:
+    def __init__(self, args: argparse.Namespace):
+        self.logger = logging.getLogger(__name__)
+        self.args = args
+    
+    def build(self):
+        # Bringup
+        self.logger.info("Hello we are on macOS")
+        if not self.args.noconfirm:
+            input("Press Enter to start build or press Ctrl+C to exit now!")
+            
+        # Create prep class
+        prep = macosx_prep()
+        
+        # Check universal2 and skipmerge statuses
+        if self.args.universal2 and not self.args.skipmerge:
+            self.logger.info("In order to build universal2, we need to download and merge a few packages.")
+            # Download and/or merge universal2 wheels
+            for package, version in prep.PACKAGES.items():
+                prep.merge_and_install(package, version)
+        elif self.args.universal2 and self.args.skipmerge:
+            self.logger.info("Building universal2 and skipping wheel preperation. This will fail if you don't have universal2 wheels!")
+        else:
+            self.logger.info("Building for current architecture. To build universal2, pass --universal2 or -u2 to this script.")
+            
+        # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
+        import PyInstaller.__main__
+        PyInstaller.__main__.run([
+            '--specpath',
+            'spec',
+            '--onedir',
+            '--windowed',
+            '--osx-bundle-identifier',
+            'thatstel.la.pywemogui',
+            *(
+                ['--target-architecture', 'universal2']
+                if self.args.universal2
+                else []
+            ),
+            '--name',
+            'PyWeMoGUI-Darwin',
+            'main.py'
+            ])
+                
+        # Rename output
+        os.rename("dist/PyWeMoGUI-Darwin.app", "dist/PyWeMoGUI-Darwin-{revision}.app".format(revision=GitUtils.get_git_revision_short_hash()))
+        
+        # Success
+        self.logger.info("Build complete check dist folder for the binary, scroll up for log")
+    
 def main():
     print(
         f"Made by 🐄 with ❤️  in 2026.\n\n"
