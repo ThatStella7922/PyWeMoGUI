@@ -5,4 +5,5 @@ venv.mac/
 .vscode/
 dist/
 build/
+wheels/
 __pycache__/

@@ -8,6 +8,8 @@ import logging
 import platform
 import subprocess
 import shutil
+from build_support.macosx import macosx
+from delocate.fuse import fuse_wheels
 from PyWeMoGUISystemUtils import GitUtils
 
 def clean_build_folder():
@@ -85,7 +87,10 @@ if __name__ == "__main__":
                 logger.info("Hello we are on macOS")
                 if not args.noconfirm:
                     input("Press Enter to start build or press Ctrl+C to exit now!")
-                #logger.info("We need to install the CPython 3.14.x macOS 10.13+ universal2 wheel for lxml!") # at https://files.pythonhosted.org/packages/03/15/d4a377b385ab693ce97b472fe0c77c2b16ec79590e688b3ccc71fba19884/lxml-6.0.2-cp314-cp314-macosx_10_13_universal2.whl
+                logger.info("In order to build universal2, we need to download and merge a few packages.")
+                buildsupport = macosx()
+                for package, version in buildsupport.PACKAGES.items():
+                    buildsupport.merge_and_install(package, version)
                 prepare_to_build()
                 # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
                 PyInstaller.__main__.run([
