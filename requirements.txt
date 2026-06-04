@@ -2,3 +2,4 @@ pywemo
 hidpi-tk
 qrcode
 pillow
+delocate

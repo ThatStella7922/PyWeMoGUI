@@ -8,6 +8,8 @@ import logging
 import platform
 import subprocess
 import shutil
+from build_support.windows import windows_build
+from build_support.macosx import macosx_build
 from PyWeMoGUISystemUtils import GitUtils
 
 def clean_build_folder():
@@ -39,9 +41,17 @@ parser = argparse.ArgumentParser(
     prog="PyWeMoGUI Build Script",
     description="Build packaged binaries of PyWeMoGUI",
     )
+
+# General
 parser.add_argument('--loglevel', '-l', help='Optionally define how verbose logs should be (default is INFO)', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO')
 parser.add_argument('--logtofile', '-lf', help='Optionally specify that the logs should be directed to a file', action="store_true")
 parser.add_argument('--noconfirm', '-nc', help='Skip confirmation before building (for automation?)', action='store_true')
+
+# macosx-specific
+parser.add_argument('--universal2', '-u2', help='Enables building one binary for both Intel-based Macs and Macs with Apple silicon', action='store_true')
+parser.add_argument('--skipmerge', '-sm', help='Skips downloading and creating universal2 wheels.', action='store_true')
+
+# parser
 args = parser.parse_args()
 
 if args.logtofile:
@@ -52,62 +62,21 @@ else:
 logger.info(f"Logger started, loglevel is set to {args.loglevel}")
 logger.info(f"Running on {platform.system()} {platform.version()} ({platform.machine()}, {os.cpu_count()}x) with Python {platform.python_version()}")
 
-import PyInstaller.__main__
-
 if __name__ == "__main__":
     try:
+        prepare_to_build()
         # Determine the OS
         match platform.system():
             case "Windows":
-                # Windows build instructions and code
-                logger.info("""For a successful build on Windows, you must:
-                          1. Install all required modules (requirements.txt) with uv or pip or whatever
-                          2. Install PyInstaller and make sure it can be found in PATH (aka a proper installation)
-
-                          Once you have made sure this is done, you can start the build""")
-                if not args.noconfirm:
-                    input("Press Enter to start build or press Ctrl+C to exit now!")
-                prepare_to_build
-                # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
-                PyInstaller.__main__.run([
-                    '--specpath',
-                    'spec',
-                    '--onefile',
-                    '--name',
-                    'PyWeMoGUI-Windows',
-                    'main.py'
-                    ])
-                # rename the output now
-                os.rename("dist/PyWeMoGUI-Windows.exe", "dist/PyWeMoGUI-Windows-{revision}.exe".format(revision=GitUtils.get_git_revision_short_hash()))
-                logger.info("Build complete check dist folder for the binary, scroll up for log")
+                buildsupport = windows_build(args)
             case "Darwin":
-                # Mac OS X build instructions and code
-                logger.info("Hello we are on macOS")
-                if not args.noconfirm:
-                    input("Press Enter to start build or press Ctrl+C to exit now!")
-                #logger.info("We need to install the CPython 3.14.x macOS 10.13+ universal2 wheel for lxml!") # at https://files.pythonhosted.org/packages/03/15/d4a377b385ab693ce97b472fe0c77c2b16ec79590e688b3ccc71fba19884/lxml-6.0.2-cp314-cp314-macosx_10_13_universal2.whl
-                prepare_to_build()
-                # Directly call PyInstaller's main module (we get to reuse its logging as opposed to subprocessing it)
-                PyInstaller.__main__.run([
-                    '--specpath',
-                    'spec',
-                    '--onedir',
-                    '--windowed',
-                    '--osx-bundle-identifier',
-                    'thatstel.la.pywemogui',
-                    '--target-architecture',
-                    'universal2',
-                    '--name',
-                    'PyWeMoGUI-Darwin',
-                    'main.py'
-                    ])
-                #rename output now
-                os.rename("dist/PyWeMoGUI-Darwin.app", "dist/PyWeMoGUI-Darwin-{revision}.app".format(revision=GitUtils.get_git_revision_short_hash()))
-                logger.info("Build complete check dist folder for the binary, scroll up for log")
+                buildsupport = macosx_build(args)
             ### ADD ADDITIONAL CASES FOR OTHER OSES
             case _:
                 #Generic catchall for an unsupported OS
                 raise NotImplementedError(f"OS '{platform.system()}' is not supported in this build script yet")
+                
+        buildsupport.build()
     #Error handling
     except NotImplementedError as nie:
         #We use NotImplementedError for when an OS is unsupported
